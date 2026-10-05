@@ -25,6 +25,13 @@ interface CarAnimationProps {
 
 export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
   const [activeDotIndex, setActiveDotIndex] = useState(0);
+  const clubLineup = useMemo(
+    () => {
+      const signalOrder = ["GNU/Linux Users' Group", "Centre for Cognitive Activities", "SAE", "MATHS N TECH CLUB", "RECURSION"];
+      return [...clubs].sort((a, b) => signalOrder.indexOf(a.name) - signalOrder.indexOf(b.name));
+    },
+    [clubs]
+  );
 
   // Flatten the clubs data into a single array of events, attaching the club name and logo to each
   const allEvents = useMemo(() => {
@@ -301,24 +308,47 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
           className="absolute z-10 mix-blend-screen opacity-95 pointer-events-none"
         />
 
-        {/* Race Car SVG */}
+        {/* Trackside boards — styled like sponsor signage on a circuit wall. */}
+        <aside className="track-welcome" aria-label="Festival welcome message">
+          <span className="track-welcome__eyebrow">AAROHAN 2026 · TEAM</span>
+          <strong>AAVISHKAR</strong>
+          <span className="track-welcome__rule" />
+          <p>National Institute of Technology Durgapur<br />proudly welcomes you.</p>
+        </aside>
+
+        {/* A ground-mounted race signal carries each club logo in a light. */}
+        <aside className="club-signal" aria-label="Participating clubs">
+          <span className="club-signal__title">CLUB GRID</span>
+          <div className="club-signal__housing">
+            {clubLineup.map((club) => (
+              <div className="club-signal__lamp" key={club.name} title={club.name}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={club.logo} alt={club.name} className="club-signal__logo" />
+              </div>
+            ))}
+          </div>
+          <div className="club-signal__pole" aria-hidden="true" />
+          <div className="club-signal__base" aria-hidden="true" />
+        </aside>
+
+        {/* Futuristic F1-style car, viewed primarily from above and behind. */}
         <svg
           ref={carRef}
           id="car"
-          viewBox="0 0 320 150"
+          viewBox="0 0 360 230"
           aria-hidden="true"
-          className="absolute left-1/2 bottom-[10vh] w-[min(42vw,420px)] min-w-[230px] origin-[50%_100%] will-change-transform drop-shadow-[0_0_18px_rgba(255,40,40,0.35)]"
+          className="absolute left-1/2 bottom-[5vh] w-[min(39vw,450px)] min-w-[235px] origin-[50%_100%] will-change-transform drop-shadow-[0_0_22px_rgba(255,40,40,0.4)]"
         >
           <defs>
             <linearGradient id="bd" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#3b3d48" />
-              <stop offset=".35" stopColor="#17181e" />
-              <stop offset="1" stopColor="#06060a" />
+              <stop offset="0" stopColor="#4b4e5a" />
+              <stop offset=".32" stopColor="#161820" />
+              <stop offset="1" stopColor="#050507" />
             </linearGradient>
-            <linearGradient id="gs" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#2a3a4a" />
-              <stop offset=".5" stopColor="#07090e" />
-              <stop offset="1" stopColor="#1b2733" />
+            <linearGradient id="cc" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#26313c" />
+              <stop offset=".45" stopColor="#080a0f" />
+              <stop offset="1" stopColor="#1c202a" />
             </linearGradient>
             <linearGradient id="tr" x1="0" x2="1">
               <stop offset="0" stopColor="#030304" />
@@ -334,55 +364,29 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
               <feGaussianBlur stdDeviation="4" />
             </filter>
           </defs>
-          <ellipse cx="160" cy="140" rx="145" ry="9" fill="#000" opacity=".7" />
-          <ellipse cx="160" cy="136" rx="110" ry="6" fill="#ff1f3a" opacity=".35" filter="url(#gl)" />
+          <ellipse cx="180" cy="217" rx="150" ry="10" fill="#000" opacity=".72" />
+          <ellipse cx="180" cy="208" rx="108" ry="7" fill="#ff1f3a" opacity=".28" filter="url(#gl)" />
           <g className="cb">
-            <rect x="10" y="56" width="66" height="82" rx="14" fill="url(#tr)" />
-            <rect x="244" y="56" width="66" height="82" rx="14" fill="url(#tr)" />
-            <rect x="64" y="66" width="8" height="62" rx="4" fill="#ff1f3a" opacity=".9" filter="url(#gl)" />
-            <rect x="248" y="66" width="8" height="62" rx="4" fill="#ff1f3a" opacity=".9" filter="url(#gl)" />
-            <rect x="66" y="68" width="4" height="58" rx="2" fill="#ff8a96" />
-            <rect x="250" y="68" width="4" height="58" rx="2" fill="#ff8a96" />
-            <rect x="10" y="56" width="66" height="82" rx="14" fill="none" stroke="#4a4d5a" strokeWidth="1.2" />
-            <rect x="244" y="56" width="66" height="82" rx="14" fill="none" stroke="#4a4d5a" strokeWidth="1.2" />
-            <path
-              d="M24 74h36M24 90h36M24 106h36M24 122h36M260 74h36M260 90h36M260 106h36M260 122h36"
-              stroke="#000"
-              strokeWidth="1.5"
-              opacity=".7"
-            />
-            <path d="M92 132 L228 132 L240 110 L80 110Z" fill="#08080b" />
-            <g fill="#1d1f27">
-              <path d="M100 128l8-14h12l-8 14zM124 128l8-14h12l-8 14zM148 128l8-14h12l-8 14zM172 128l8-14h12l-8 14zM196 128l8-14h12l-8 14z" />
-            </g>
-            <path d="M54 112 L82 76 Q100 58 134 54 L186 54 Q220 58 238 76 L266 112Z" fill="url(#bd)" />
-            <path d="M112 60 L208 60 L222 80 L98 80Z" fill="url(#gs)" />
-            <path d="M118 63 L200 63" stroke="#8fe8ff" strokeOpacity=".55" strokeWidth="1.5" />
-            <path
-              d="M54 112 L82 76 Q100 58 134 54"
-              stroke="#8fe8ff"
-              strokeOpacity=".7"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <path
-              d="M266 112 L238 76 Q220 58 186 54"
-              stroke="#8fe8ff"
-              strokeOpacity=".4"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <path d="M156 54 H164 L168 80 H152Z" fill="#ff1f3a" opacity=".8" />
-            <path d="M62 104 L90 90 L130 90 L124 104Z M258 104 L230 90 L190 90 L196 104Z" fill="#050508" stroke="#2b2e3a" />
-            <rect x="66" y="90" width="188" height="7" rx="3.5" fill="#ff1f3a" filter="url(#gl)" className="tl" />
-            <rect x="68" y="91.5" width="184" height="4" rx="2" fill="url(#lb)" />
-            <path d="M118 22 L84 70 M202 22 L236 70" stroke="#14151b" strokeWidth="7" />
-            <path d="M118 22 L84 70 M202 22 L236 70" stroke="#8fe8ff" strokeOpacity=".5" strokeWidth="1" />
-            <path d="M30 20 L290 20 L278 32 L42 32Z" fill="#101117" />
-            <path d="M30 20 L290 20" stroke="#cfe" strokeOpacity=".7" strokeWidth="1.4" />
-            <path d="M42 32 L278 32" stroke="#ff1f3a" strokeWidth="2.4" />
-            <path d="M26 8 L40 8 L50 40 L34 40Z M294 8 L280 8 L270 40 L286 40Z" fill="#c4122c" />
-            <path d="M26 8 L40 8" stroke="#fff" strokeOpacity=".6" />
+            {/* Front-facing red Formula 1 car, based on the first supplied reference. */}
+            <rect x="32" y="94" width="68" height="95" rx="23" fill="url(#tr)" stroke="#5b606c" strokeWidth="2" />
+            <rect x="260" y="94" width="68" height="95" rx="23" fill="url(#tr)" stroke="#5b606c" strokeWidth="2" />
+            <path d="M40 118h52M40 137h52M40 156h52M268 118h52M268 137h52M268 156h52" stroke="#050507" strokeWidth="2" />
+            <path d="M96 116L126 64Q140 42 158 34H202Q220 42 234 64L264 116 238 160H122Z" fill="url(#bd)" stroke="#777d89" strokeWidth="1.5" />
+            <path d="M133 88L150 39H210L227 88 208 114H152Z" fill="url(#cc)" />
+            <path d="M150 48Q180 23 210 48L204 75H156Z" fill="#0c1117" stroke="#9beeff" strokeOpacity=".6" />
+            <path d="M158 51Q180 37 202 51" stroke="#bdf6ff" strokeOpacity=".58" strokeWidth="2" fill="none" />
+            <path d="M136 68L114 122M224 68L246 122" stroke="#ff2a43" strokeWidth="6" />
+            <path d="M136 68L114 122M224 68L246 122" stroke="#c9fbff" strokeOpacity=".5" strokeWidth="1.2" />
+            <path d="M147 96H213L225 149H135Z" fill="#bc162c" />
+            <path d="M161 99H199L208 151H152Z" fill="#11131a" />
+            <path d="M173 102H187L192 174H168Z" fill="#d72539" />
+            <path d="M176 105H184L187 166H173Z" fill="#e8edf0" opacity=".8" />
+            <path d="M68 168H292L326 203H34Z" fill="#08090d" stroke="#626875" strokeWidth="2" />
+            <path d="M39 193H321" stroke="#ff1f3a" strokeWidth="7" filter="url(#gl)" className="tl" />
+            <path d="M48 190H312" stroke="url(#lb)" strokeWidth="4" />
+            <path d="M54 176L118 162M306 176L242 162" stroke="#c51e34" strokeWidth="5" />
+            <path d="M96 180L128 165M264 180L232 165" stroke="#9df0ff" strokeOpacity=".45" strokeWidth="1.5" />
+            <path d="M119 203H241" stroke="#c9faff" strokeOpacity=".55" strokeWidth="1.5" />
           </g>
         </svg>
 
