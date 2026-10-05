@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aarohan | NIT Durgapur Tech Fest</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Empty tall block. Its height is what gives the page something to scroll through. -->
+  <div id="track"></div>
+
+  <!-- Everything visible lives in this fixed layer and is moved by script.js -->
+  <div id="stage">
+
+    <!-- Background image plus the lane dashes that are drawn on top of it -->
+    <svg id="road" viewBox="0 0 1088 780" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <image href="assets/background.png" x="0" y="0" width="1088" height="780"/>
+      <g id="dash" fill="#cfcfd5"></g>
+    </svg>
+
+    <img id="logo" src="assets/logo.png" alt="Aarohan logo">
+
+    <!-- Race car -->
+    <svg id="car" viewBox="0 0 320 150" aria-hidden="true"><defs>
+<linearGradient id="bd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3d48"/><stop offset=".35" stop-color="#17181e"/><stop offset="1" stop-color="#06060a"/></linearGradient>
+<linearGradient id="gs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a3a4a"/><stop offset=".5" stop-color="#07090e"/><stop offset="1" stop-color="#1b2733"/></linearGradient>
+<linearGradient id="tr" x1="0" x2="1"><stop offset="0" stop-color="#030304"/><stop offset=".5" stop-color="#26262c"/><stop offset="1" stop-color="#030304"/></linearGradient>
+<linearGradient id="lb" x1="0" x2="1"><stop offset="0" stop-color="#ff1f3a"/><stop offset=".5" stop-color="#ffd9dc"/><stop offset="1" stop-color="#ff1f3a"/></linearGradient>
+<filter id="gl" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="4"/></filter></defs>
+<ellipse cx="160" cy="140" rx="145" ry="9" fill="#000" opacity=".7"/><ellipse cx="160" cy="136" rx="110" ry="6" fill="#ff1f3a" opacity=".35" filter="url(#gl)"/>
+<g class="cb">
+<rect x="10" y="56" width="66" height="82" rx="14" fill="url(#tr)"/><rect x="244" y="56" width="66" height="82" rx="14" fill="url(#tr)"/>
+<rect x="64" y="66" width="8" height="62" rx="4" fill="#ff1f3a" opacity=".9" filter="url(#gl)"/><rect x="248" y="66" width="8" height="62" rx="4" fill="#ff1f3a" opacity=".9" filter="url(#gl)"/>
+<rect x="66" y="68" width="4" height="58" rx="2" fill="#ff8a96"/><rect x="250" y="68" width="4" height="58" rx="2" fill="#ff8a96"/>
+<rect x="10" y="56" width="66" height="82" rx="14" fill="none" stroke="#4a4d5a" stroke-width="1.2"/><rect x="244" y="56" width="66" height="82" rx="14" fill="none" stroke="#4a4d5a" stroke-width="1.2"/>
+<path d="M24 74h36M24 90h36M24 106h36M24 122h36M260 74h36M260 90h36M260 106h36M260 122h36" stroke="#000" stroke-width="1.5" opacity=".7"/>
+<path d="M92 132 L228 132 L240 110 L80 110Z" fill="#08080b"/>
+<g fill="#1d1f27"><path d="M100 128l8-14h12l-8 14zM124 128l8-14h12l-8 14zM148 128l8-14h12l-8 14zM172 128l8-14h12l-8 14zM196 128l8-14h12l-8 14z"/></g>
+<path d="M54 112 L82 76 Q100 58 134 54 L186 54 Q220 58 238 76 L266 112Z" fill="url(#bd)"/>
+<path d="M112 60 L208 60 L222 80 L98 80Z" fill="url(#gs)"/><path d="M118 63 L200 63" stroke="#8fe8ff" stroke-opacity=".55" stroke-width="1.5"/>
+<path d="M54 112 L82 76 Q100 58 134 54" stroke="#8fe8ff" stroke-opacity=".7" stroke-width="1.5" fill="none"/><path d="M266 112 L238 76 Q220 58 186 54" stroke="#8fe8ff" stroke-opacity=".4" stroke-width="1.5" fill="none"/>
+<path d="M156 54 H164 L168 80 H152Z" fill="#ff1f3a" opacity=".8"/>
+<path d="M62 104 L90 90 L130 90 L124 104Z M258 104 L230 90 L190 90 L196 104Z" fill="#050508" stroke="#2b2e3a"/>
+<rect x="66" y="90" width="188" height="7" rx="3.5" fill="#ff1f3a" filter="url(#gl)" class="tl"/><rect x="68" y="91.5" width="184" height="4" rx="2" fill="url(#lb)"/>
+<path d="M118 22 L84 70 M202 22 L236 70" stroke="#14151b" stroke-width="7"/><path d="M118 22 L84 70 M202 22 L236 70" stroke="#8fe8ff" stroke-opacity=".5" stroke-width="1"/>
+<path d="M30 20 L290 20 L278 32 L42 32Z" fill="#101117"/><path d="M30 20 L290 20" stroke="#cfe" stroke-opacity=".7" stroke-width="1.4"/><path d="M42 32 L278 32" stroke="#ff1f3a" stroke-width="2.4"/>
+<path d="M26 8 L40 8 L50 40 L34 40Z M294 8 L280 8 L270 40 L286 40Z" fill="#c4122c"/><path d="M26 8 L40 8" stroke="#fff" stroke-opacity=".6"/>
+</g></svg>
+
+    <!-- Event panels: one appears for each scroll section. Add or remove sections freely. -->
+    <section class="panel">
+      <small>01 &middot; FLAGSHIP</small>
+      <h2>HACKATHON</h2>
+      <p>24 hours of building, breaking and shipping. Teams from across the country compete for the grand prize.</p>
+      <div class="tags"><span>24 hrs</span><span>Team of 4</span><span>Prize pool</span></div>
+    </section>
+
+    <section class="panel">
+      <small>02 &middot; ROBOTICS</small>
+      <h2>ROBO RACE</h2>
+      <p>Build autonomous bots and race them around a timed circuit. Speed, precision and good engineering decide the winner.</p>
+      <div class="tags"><span>Robotics</span><span>Arena</span><span>Live</span></div>
+    </section>
+
+    <section class="panel">
+      <small>03 &middot; SECURITY</small>
+      <h2>CAPTURE THE FLAG</h2>
+      <p>Solve puzzles, break challenges and climb the leaderboard in the online and onsite CTF.</p>
+      <div class="tags"><span>CTF</span><span>Cyber</span><span>Solo / Duo</span></div>
+    </section>
+
+    <section class="panel">
+      <small>04 &middot; LEARN</small>
+      <h2>TALKS &amp; WORKSHOPS</h2>
+      <p>Industry speakers, hands-on workshops and guest lectures on AI, web, hardware and more.</p>
+      <div class="tags"><span>Speakers</span><span>Workshops</span><span>Networking</span></div>
+    </section>
+
+    <!-- Progress dots on the right edge. Keep one dot per panel. -->
+    <div id="dots"><b></b><b></b><b></b><b></b></div>
+
+    <div id="hint">SCROLL TO RACE</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+/* Aarohan landing page */
+
+:root {
+  --red: #b03a3f;
+  --glass: rgba(170, 170, 180, 0.13);
+  --line: rgba(255, 255, 255, 0.22);
+  --text: #e9e9ee;
+  --muted: #a9a9b3;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: #050505;
+}
+
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+}
+
+/* Total scroll length. Make it taller for a slower race, shorter for a faster one. */
+#track { height: 600vh; }
+
+#stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+/* Background image. It zooms toward the horizon as the page scrolls. */
+#road {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 68%;
+  will-change: transform;
+}
+
+/* Logo stays fixed in the top-left corner. Screen blending drops its black background. */
+#logo {
+  position: absolute;
+  z-index: 3;
+  mix-blend-mode: screen;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+/* Car */
+#car {
+  position: absolute;
+  left: 50%;
+  bottom: 10vh;
+  width: min(42vw, 420px);
+  min-width: 230px;
+  transform-origin: 50% 100%;
+  will-change: transform;
+  filter: drop-shadow(0 0 18px rgba(255, 40, 40, 0.35));
+}
+
+.cb { animation: vibrate 0.12s linear infinite alternate; }
+.tl { animation: pulse 1.2s ease-in-out infinite alternate; }
+
+@keyframes vibrate { to { transform: translateY(-0.8px); } }
+@keyframes pulse { from { opacity: 0.55; } }
+
+/* Event panels */
+.panel {
+  position: absolute;
+  left: 50%;
+  top: 14vh;
+  width: min(720px, 88vw);
+  padding: 28px 30px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.panel small {
+  color: var(--red);
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+.panel h2 {
+  margin: 6px 0 10px;
+  font-size: clamp(24px, 4vw, 40px);
+  letter-spacing: 2px;
+}
+
+.panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tags span {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  font-size: 12px;
+}
+
+/* Progress dots */
+#dots {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: translateY(-50%);
+}
+
+#dots b {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #555;
+  transition: 0.3s;
+}
+
+#dots b.on {
+  background: var(--red);
+  transform: scale(1.5);
+}
+
+#hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb, .tl { animation: none; }
+}
