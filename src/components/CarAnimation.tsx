@@ -24,24 +24,11 @@ interface CarAnimationProps {
 
 export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
   const [activeDotIndex, setActiveDotIndex] = useState(0);
-  const clubLineup = useMemo(() => {
-    const signalOrder = [
-      "GNU/Linux Users' Group",
-      "Centre for Cognitive Activities",
-      "SAE",
-      "MATHS N TECH CLUB",
-      "RECURSION",
-    ];
-    return [...clubs].sort(
-      (a, b) => signalOrder.indexOf(a.name) - signalOrder.indexOf(b.name)
-    );
-  }, [clubs]);
 
   const allEvents = useMemo(() => {
     return clubs.flatMap((club) =>
       club.events.map((event) => ({
         ...event,
-        clubName: club.name,
         clubLogo: club.logo,
       }))
     );
@@ -163,7 +150,6 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
         }px), 0) ` +
         `scale(${scale}) rotate(${roll}deg)`;
 
-      // Update tyre rotation speed and state based on scroll velocity
       car.style.setProperty("--roll-state", wind > 0.005 ? "running" : "paused");
       car.style.setProperty("--roll-speed", `${Math.max(0.08, 0.4 - wind * 0.8)}s`);
     };
@@ -364,7 +350,6 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
 
   return (
     <>
-      {/* CSS for animating the tyre treads */}
       <style>{`
         @keyframes tyre-roll-down {
           to { stroke-dashoffset: -120; }
@@ -428,28 +413,6 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
             <br />
             proudly welcomes you.
           </p>
-        </aside>
-
-        <aside className="club-signal" aria-label="Participating clubs">
-          <span className="club-signal__title">CLUB GRID</span>
-          <div className="club-signal__housing">
-            {clubLineup.map((club) => (
-              <div
-                className="club-signal__lamp"
-                key={club.name}
-                title={club.name}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={club.logo}
-                  alt={club.name}
-                  className="club-signal__logo"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="club-signal__pole" aria-hidden="true" />
-          <div className="club-signal__base" aria-hidden="true" />
         </aside>
 
         {/* Pro 3D SVG Car with Rotating Tyres */}
@@ -522,18 +485,14 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
             </clipPath>
 
             <g id="tyre">
-              {/* Main Tread Profile */}
               <path d="M20 300Q20 250 80 245L190 235Q230 238 238 290L244 485Q240 525 192 530L72 530Q18 525 15 480Z" fill="url(#tyreTread)" />
-              {/* Inner Sidewall Curve */}
               <path d="M78 245L190 235Q228 238 234 285Q140 315 35 305Q30 255 78 245Z" fill="url(#tyreWall)" />
               
-              {/* Rotating Tread Grooves using CSS stroke-dashoffset animation */}
               <path d="M25 330Q35 430 70 510M45 330Q55 430 90 510M65 330Q75 430 110 510" 
                     stroke="#0a0a0a" strokeWidth="8" strokeLinecap="round" fill="none" 
                     strokeDasharray="25 15" 
                     className="tyre-roll" />
                     
-              {/* Animated Red Heat/Motion Line overlay */}
               <path d="M40 340Q50 430 86 512" 
                     stroke="#d61525" strokeOpacity="0.8" strokeWidth="4" strokeLinecap="round" fill="none" 
                     strokeDasharray="40 30" 
@@ -644,26 +603,12 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
 
         {allEvents.map((event, index) => (
           <section
-            key={`${event.clubName}-${event.id}-${index}`}
+            key={`${event.id}-${index}`}
             ref={(el) => {
               panelRefs.current[index] = el;
             }}
             className="absolute left-1/2 top-[14vh] w-[min(720px,88vw)] p-7 border border-[var(--line)] rounded-2xl bg-[var(--glass)] backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)] opacity-0 will-change-transform"
           >
-            <div className="flex items-center gap-3 mb-2">
-              {event.clubLogo && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={event.clubLogo}
-                  alt={`${event.clubName} Logo`}
-                  className="w-6 h-6 object-contain mix-blend-screen"
-                />
-              )}
-              <small className="text-[#b03a3f] text-xs tracking-[3px] uppercase">
-                {event.clubName} &middot; {event.number} &middot; {event.category}
-              </small>
-            </div>
-
             <h2 className="my-1.5 text-[clamp(24px,4vw,40px)] tracking-widest">
               {event.title}
             </h2>
