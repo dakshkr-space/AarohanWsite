@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 
-// Update the interfaces to match the nested clubs data structure
 interface EventItem {
   id: string;
   number: string;
@@ -25,15 +24,19 @@ interface CarAnimationProps {
 
 export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
   const [activeDotIndex, setActiveDotIndex] = useState(0);
-  const clubLineup = useMemo(
-    () => {
-      const signalOrder = ["GNU/Linux Users' Group", "Centre for Cognitive Activities", "SAE", "MATHS N TECH CLUB", "RECURSION"];
-      return [...clubs].sort((a, b) => signalOrder.indexOf(a.name) - signalOrder.indexOf(b.name));
-    },
-    [clubs]
-  );
+  const clubLineup = useMemo(() => {
+    const signalOrder = [
+      "GNU/Linux Users' Group",
+      "Centre for Cognitive Activities",
+      "SAE",
+      "MATHS N TECH CLUB",
+      "RECURSION",
+    ];
+    return [...clubs].sort(
+      (a, b) => signalOrder.indexOf(a.name) - signalOrder.indexOf(b.name)
+    );
+  }, [clubs]);
 
-  // Flatten the clubs data into a single array of events, attaching the club name and logo to each
   const allEvents = useMemo(() => {
     return clubs.flatMap((club) =>
       club.events.map((event) => ({
@@ -49,6 +52,7 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
   const windCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoRef = useRef<HTMLImageElement | null>(null);
   const carRef = useRef<SVGSVGElement | null>(null);
+  const glintRef = useRef<SVGGElement | null>(null);
   const hintRef = useRef<HTMLDivElement | null>(null);
   const panelRefs = useRef<(HTMLElement | null)[]>([]);
 
@@ -63,23 +67,113 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
 
     const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
     const smooth = (t: number) => t * t * (3 - 2 * t);
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-    // Create SVG Lane Dashes
     const dashGroup = dashRef.current;
     const dashShapes: SVGPolygonElement[] = [];
     if (dashGroup) {
       dashGroup.innerHTML = "";
       for (let i = 0; i < DASHES; i++) {
-        const shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        const shape = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "polygon"
+        );
         dashGroup.appendChild(shape);
         dashShapes.push(shape);
       }
     }
 
-    // Main event logo placement
+    const HOOD_TOP = 250;
+    const HOOD_BOTTOM = 520;
+    const HOOD_TOP_L = 478;
+    const HOOD_TOP_R = 522;
+    const HOOD_BOT_L = 190;
+    const HOOD_BOT_R = 810;
+    const GLINTS = 9;
+    const glintGroup = glintRef.current;
+    const glintShapes: SVGPolygonElement[] = [];
+    if (glintGroup) {
+      glintGroup.innerHTML = "";
+      for (let i = 0; i < GLINTS; i++) {
+        const shape = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "polygon"
+        );
+        shape.setAttribute("fill", "#ffffff");
+        glintGroup.appendChild(shape);
+        glintShapes.push(shape);
+      }
+    }
+
+    const hoodEdge = (y: number) => {
+      const k = (y - HOOD_TOP) / (HOOD_BOTTOM - HOOD_TOP);
+      return {
+        l: HOOD_TOP_L + (HOOD_BOT_L - HOOD_TOP_L) * k,
+        r: HOOD_TOP_R + (HOOD_BOT_R - HOOD_TOP_R) * k,
+      };
+    };
+
+    const updateGlints = (progress: number) => {
+      const phase = progress * 70;
+      glintShapes.forEach((shape, i) => {
+        const t = ((i + phase) % GLINTS) / GLINTS;
+        const e = t * t;
+        const y1 = HOOD_TOP + (HOOD_BOTTOM - HOOD_TOP) * e;
+        const y2 = y1 + 2 + 14 * e;
+        const a = hoodEdge(y1);
+        const b = hoodEdge(y2);
+        shape.setAttribute(
+          "points",
+          `${a.l},${y1} ${a.r},${y1} ${b.r},${y2} ${b.l},${y2}`
+        );
+        shape.setAttribute(
+          "opacity",
+          (0.15 * Math.sin(t * Math.PI) * clamp(progress * 20)).toString()
+        );
+      });
+    };
+
+    let progress = 0;
+    let wind = 0;
+
+    const applyCar = () => {
+      const car = carRef.current;
+      if (!car) return;
+      const intro = smooth(clamp(progress / 0.1));
+      const wave = progress * panelsCount * Math.PI * 2;
+      const t = performance.now() / 1000;
+
+      const live = reduceMotion ? 0 : 1;
+      const shakeY =
+        (Math.sin(t * 43) * 1.8 + Math.sin(t * 71) * 1.0) * wind * live;
+      const shakeX = Math.sin(t * 53) * 1.2 * wind * live;
+      const idle = Math.sin(t * 2.2) * 0.6 * live;
+      const squat = wind * 7;
+      const sway = Math.sin(wave) * 1.4;
+      const roll = Math.cos(wave) * 0.7 + shakeX * 0.25;
+      const scale = 1 + progress * 0.03 + wind * 0.025;
+      const rise = (1 - intro) * 5;
+
+      car.style.transform =
+        `translateX(-50%) ` +
+        `translate3d(${sway + shakeX * 0.1}vw, calc(${rise}vh + ${
+          squat + shakeY + idle
+        }px), 0) ` +
+        `scale(${scale}) rotate(${roll}deg)`;
+
+      // Update tyre rotation speed and state based on scroll velocity
+      car.style.setProperty("--roll-state", wind > 0.005 ? "running" : "paused");
+      car.style.setProperty("--roll-speed", `${Math.max(0.08, 0.4 - wind * 0.8)}s`);
+    };
+
     const placeLogo = () => {
       if (!logoRef.current) return;
-      const scale = Math.max(window.innerWidth / 1088, window.innerHeight / 780);
+      const scale = Math.max(
+        window.innerWidth / 1088,
+        window.innerHeight / 780
+      );
       const width = Math.min(84, Math.max(44, 66 * scale));
       const offsetX = (window.innerWidth - 1088 * scale) / 2;
       const offsetY = window.innerHeight - 780 * scale;
@@ -90,13 +184,12 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
       logoRef.current.style.top = `${Math.max(12, offsetY + 13 * scale)}px`;
     };
 
-    // Scroll Update Handler
     const update = () => {
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = clamp(window.scrollY / (maxScroll || 1));
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      progress = clamp(window.scrollY / (maxScroll || 1));
       const section = progress * panelsCount;
 
-      // Update Lane Dashes
       const phase = progress * 40;
       dashShapes.forEach((shape, i) => {
         const t = ((i + phase) % DASHES) / DASHES;
@@ -108,12 +201,16 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
 
         shape.setAttribute(
           "points",
-          `${CENTER_X - w1},${y1} ${CENTER_X + w1},${y1} ${CENTER_X + w2},${y2} ${CENTER_X - w2},${y2}`
+          `${CENTER_X - w1},${y1} ${CENTER_X + w1},${y1} ${
+            CENTER_X + w2
+          },${y2} ${CENTER_X - w2},${y2}`
         );
-        shape.setAttribute("opacity", (clamp(t * 3) * clamp(progress * 12)).toString());
+        shape.setAttribute(
+          "opacity",
+          (clamp(t * 3) * clamp(progress * 12)).toString()
+        );
       });
 
-      // Road Zoom
       if (roadRef.current) {
         const intro = smooth(clamp(progress / 0.12));
         const zoom = 0.5 * intro + 0.5 * progress;
@@ -121,25 +218,13 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
         roadRef.current.style.transform = `scale(${1 + zoom * 0.4 + midBoost})`;
       }
 
-      // Scroll Hint Fade
       if (hintRef.current) {
-        hintRef.current.style.opacity = (clamp(1 - progress * 10)).toString();
+        hintRef.current.style.opacity = clamp(1 - progress * 10).toString();
       }
 
-      // Car Translation & Shake
-      if (carRef.current) {
-        const intro = smooth(clamp(progress / 0.12));
-        const zoom = 0.5 * intro + 0.5 * progress;
-        const wave = progress * panelsCount * Math.PI * 2;
-        const shake = Math.sin(progress * 900) * 0.7 * intro;
-        carRef.current.style.transform =
-          `translateX(calc(-50% + ${Math.sin(wave) * 4}vw)) ` +
-          `translateY(calc(${-intro * 13}vh + ${shake}px)) ` +
-          `scale(${1 + zoom * 0.2 - intro * 0.08}) ` +
-          `rotate(${Math.cos(wave) * 2.5}deg)`;
-      }
+      updateGlints(progress);
+      applyCar();
 
-      // Panels Transition
       panelRefs.current.forEach((panel, i) => {
         if (!panel) return;
         const distance = section - (i + 0.5);
@@ -147,16 +232,15 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
         const opacity = clamp(1.1 - away * 2.2) * clamp(progress * 40);
 
         panel.style.opacity = opacity.toString();
-        panel.style.transform = `translate(-50%, ${-distance * 40}vh) scale(${1 + distance * 0.9})`;
+        panel.style.transform = `translate(-50%, ${-distance * 40}vh) scale(${
+          1 + distance * 0.9
+        })`;
         panel.style.pointerEvents = opacity > 0.5 ? "auto" : "none";
       });
 
-      // Dot Indicator State
-      const currentActive = Math.floor(section);
-      setActiveDotIndex(clamp(currentActive, 0, panelsCount - 1));
+      setActiveDotIndex(clamp(Math.floor(section), 0, panelsCount - 1));
     };
 
-    // Wind Canvas Configuration
     const canvas = windCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -181,11 +265,11 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
       alpha: 0.25 + Math.random() * 0.45,
     });
 
-    const streaks: Streak[] = Array.from({ length: STREAKS }, () => newStreak(true));
-    let wind = 0;
+    const streaks: Streak[] = Array.from({ length: STREAKS }, () =>
+      newStreak(true)
+    );
     let lastY = window.scrollY;
     let windRunning = false;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const sizeCanvas = () => {
       const ratio = window.devicePixelRatio || 1;
@@ -216,7 +300,11 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
         const tail = Math.max(0, s.t - s.length * (0.4 + wind)) ** 2;
         const cos = Math.cos(s.angle);
         const sin = Math.sin(s.angle);
-        const alpha = s.alpha * wind * Math.min(1, s.t * 2.5) * (1 - Math.max(0, s.t - 0.85) * 5);
+        const alpha =
+          s.alpha *
+          wind *
+          Math.min(1, s.t * 2.5) *
+          (1 - Math.max(0, s.t - 0.85) * 5);
 
         ctx.strokeStyle = `rgba(215, 210, 222, ${Math.max(0, alpha)})`;
         ctx.lineWidth = s.width * (0.5 + s.t);
@@ -226,11 +314,15 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
         ctx.stroke();
       });
 
+      applyCar();
+
       if (wind > 0.01) {
         requestAnimationFrame(drawWind);
       } else {
         windRunning = false;
+        wind = 0;
         ctx.clearRect(0, 0, w, h);
+        applyCar();
       }
     };
 
@@ -272,12 +364,27 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
 
   return (
     <>
-      {/* Tall container providing scroll space based on total events */}
-      <div id="track" style={{ height: `${Math.max(600, allEvents.length * 150)}vh` }} />
+      {/* CSS for animating the tyre treads */}
+      <style>{`
+        @keyframes tyre-roll-down {
+          to { stroke-dashoffset: -120; }
+        }
+        .tyre-roll {
+          animation: tyre-roll-down var(--roll-speed, 0.4s) linear infinite;
+          animation-play-state: var(--roll-state, paused);
+        }
+        .tyre-roll-fast {
+          animation: tyre-roll-down calc(var(--roll-speed, 0.4s) * 0.6) linear infinite;
+          animation-play-state: var(--roll-state, paused);
+        }
+      `}</style>
 
-      {/* Fixed viewport stage */}
+      <div
+        id="track"
+        style={{ height: `${Math.max(600, allEvents.length * 150)}vh` }}
+      />
+
       <div id="stage" className="fixed inset-0 overflow-hidden bg-[#050505]">
-        {/* Road SVG */}
         <svg
           ref={roadRef}
           id="road"
@@ -286,11 +393,16 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
           aria-hidden="true"
           className="absolute inset-0 w-full h-full origin-[50%_78%] will-change-transform"
         >
-          <image href="/assets/background.png" x="0" y="0" width="1088" height="780" />
+          <image
+            href="/assets/background.png"
+            x="0"
+            y="0"
+            width="1088"
+            height="780"
+          />
           <g ref={dashRef} id="dash" fill="#cfcfd5" />
         </svg>
 
-        {/* Wind Canvas */}
         <canvas
           ref={windCanvasRef}
           id="wind"
@@ -298,7 +410,6 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
           className="absolute inset-0 w-full h-full pointer-events-none"
         />
 
-        {/* Main Event Logo */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={logoRef}
@@ -308,22 +419,32 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
           className="absolute z-10 mix-blend-screen opacity-95 pointer-events-none"
         />
 
-        {/* Trackside boards — styled like sponsor signage on a circuit wall. */}
         <aside className="track-welcome" aria-label="Festival welcome message">
           <span className="track-welcome__eyebrow">AAROHAN 2026 · TEAM</span>
           <strong>AAVISHKAR</strong>
           <span className="track-welcome__rule" />
-          <p>National Institute of Technology Durgapur<br />proudly welcomes you.</p>
+          <p>
+            National Institute of Technology Durgapur
+            <br />
+            proudly welcomes you.
+          </p>
         </aside>
 
-        {/* A ground-mounted race signal carries each club logo in a light. */}
         <aside className="club-signal" aria-label="Participating clubs">
           <span className="club-signal__title">CLUB GRID</span>
           <div className="club-signal__housing">
             {clubLineup.map((club) => (
-              <div className="club-signal__lamp" key={club.name} title={club.name}>
+              <div
+                className="club-signal__lamp"
+                key={club.name}
+                title={club.name}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={club.logo} alt={club.name} className="club-signal__logo" />
+                <img
+                  src={club.logo}
+                  alt={club.name}
+                  className="club-signal__logo"
+                />
               </div>
             ))}
           </div>
@@ -331,66 +452,196 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
           <div className="club-signal__base" aria-hidden="true" />
         </aside>
 
-        {/* Futuristic F1-style car, viewed primarily from above and behind. */}
+        {/* Pro 3D SVG Car with Rotating Tyres */}
         <svg
           ref={carRef}
           id="car"
-          viewBox="0 0 360 230"
+          viewBox="0 0 1000 520"
           aria-hidden="true"
-          className="absolute left-1/2 bottom-[5vh] w-[min(39vw,450px)] min-w-[235px] origin-[50%_100%] will-change-transform drop-shadow-[0_0_22px_rgba(255,40,40,0.4)]"
+          className="absolute left-1/2 bottom-[-1vh] z-[5] w-[min(62vw,780px)] min-w-[440px] origin-[50%_100%] will-change-transform pointer-events-none drop-shadow-[0_15px_35px_rgba(0,0,0,0.8)]"
         >
           <defs>
-            <linearGradient id="bd" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#4b4e5a" />
-              <stop offset=".32" stopColor="#161820" />
-              <stop offset="1" stopColor="#050507" />
+            <pattern
+              id="carbon"
+              width="6"
+              height="6"
+              patternUnits="userSpaceOnUse"
+            >
+              <rect width="6" height="6" fill="#141414" />
+              <path d="M0,0 L3,3 M3,0 L6,3 M0,3 L3,6 M3,3 L6,6" stroke="#252525" strokeWidth="1.5" />
+            </pattern>
+
+            <linearGradient id="bodyRed" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#4a0004" />
+              <stop offset="15%" stopColor="#a30009" />
+              <stop offset="50%" stopColor="#f51120" />
+              <stop offset="85%" stopColor="#a30009" />
+              <stop offset="100%" stopColor="#4a0004" />
             </linearGradient>
-            <linearGradient id="cc" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#26313c" />
-              <stop offset=".45" stopColor="#080a0f" />
-              <stop offset="1" stopColor="#1c202a" />
+            
+            <linearGradient id="paintGloss" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
+              <stop offset="25%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="70%" stopColor="#000000" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.8" />
             </linearGradient>
-            <linearGradient id="tr" x1="0" x2="1">
-              <stop offset="0" stopColor="#030304" />
-              <stop offset=".5" stopColor="#26262c" />
-              <stop offset="1" stopColor="#030304" />
+
+            <linearGradient id="shadowGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#000" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000" stopOpacity="0.95" />
             </linearGradient>
-            <linearGradient id="lb" x1="0" x2="1">
-              <stop offset="0" stopColor="#ff1f3a" />
-              <stop offset=".5" stopColor="#ffd9dc" />
-              <stop offset="1" stopColor="#ff1f3a" />
+
+            <linearGradient id="tyreTread" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#050505" />
+              <stop offset="20%" stopColor="#1a1c21" />
+              <stop offset="50%" stopColor="#22242a" />
+              <stop offset="80%" stopColor="#1a1c21" />
+              <stop offset="100%" stopColor="#050505" />
             </linearGradient>
-            <filter id="gl" x="-20%" y="-200%" width="140%" height="500%">
-              <feGaussianBlur stdDeviation="4" />
-            </filter>
+
+            <linearGradient id="tyreWall" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#000000" />
+              <stop offset="50%" stopColor="#1a1a1a" />
+              <stop offset="100%" stopColor="#0a0a0a" />
+            </linearGradient>
+
+            <linearGradient id="screenGloss" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+              <stop offset="40%" stopColor="#ffffff" stopOpacity="0.05" />
+              <stop offset="40.1%" stopColor="#000000" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.6" />
+            </linearGradient>
+
+            <radialGradient id="gloveShadow" cx="50%" cy="50%" r="50%">
+              <stop offset="50%" stopColor="#d91828" />
+              <stop offset="100%" stopColor="#5c040d" />
+            </radialGradient>
+
+            <clipPath id="hoodClip">
+              <path d="M478 250Q500 243 522 250Q620 390 810 520H190Q380 390 478 250Z" />
+            </clipPath>
+
+            <g id="tyre">
+              {/* Main Tread Profile */}
+              <path d="M20 300Q20 250 80 245L190 235Q230 238 238 290L244 485Q240 525 192 530L72 530Q18 525 15 480Z" fill="url(#tyreTread)" />
+              {/* Inner Sidewall Curve */}
+              <path d="M78 245L190 235Q228 238 234 285Q140 315 35 305Q30 255 78 245Z" fill="url(#tyreWall)" />
+              
+              {/* Rotating Tread Grooves using CSS stroke-dashoffset animation */}
+              <path d="M25 330Q35 430 70 510M45 330Q55 430 90 510M65 330Q75 430 110 510" 
+                    stroke="#0a0a0a" strokeWidth="8" strokeLinecap="round" fill="none" 
+                    strokeDasharray="25 15" 
+                    className="tyre-roll" />
+                    
+              {/* Animated Red Heat/Motion Line overlay */}
+              <path d="M40 340Q50 430 86 512" 
+                    stroke="#d61525" strokeOpacity="0.8" strokeWidth="4" strokeLinecap="round" fill="none" 
+                    strokeDasharray="40 30" 
+                    className="tyre-roll-fast" />
+            </g>
+
+            <g id="arms">
+              <path d="M225 295L360 390M225 345L360 415" stroke="url(#carbon)" strokeWidth="16" strokeLinecap="round" />
+              <path d="M225 295L360 390M225 345L360 415" stroke="#111" strokeWidth="16" strokeOpacity="0.4" strokeLinecap="round" />
+              <path d="M230 315L335 335" stroke="url(#carbon)" strokeWidth="8" strokeLinecap="round" />
+            </g>
+
+            <g id="shoulder">
+              <path d="M150 520Q160 420 262 390L370 410Q390 460 404 520Z" fill="url(#bodyRed)" />
+              <path d="M150 520Q160 420 262 390L370 410Q390 460 404 520Z" fill="url(#paintGloss)" />
+              <path d="M262 390L370 410Q390 460 404 520H150Q160 420 262 390Z" fill="url(#shadowGradient)" opacity="0.6"/>
+              <path d="M262 390L370 410" stroke="#ff8c96" strokeOpacity="0.6" strokeWidth="2" />
+            </g>
+
+            <g id="mirror">
+              <path d="M214 345L300 400" stroke="url(#carbon)" strokeWidth="12" strokeLinecap="round" />
+              <rect x="76" y="312" width="146" height="68" rx="12" fill="url(#carbon)" />
+              <rect x="76" y="312" width="146" height="68" rx="12" fill="url(#paintGloss)" opacity="0.5" />
+              <rect x="88" y="324" width="122" height="44" rx="6" fill="#1c2029" />
+              <rect x="88" y="324" width="122" height="44" rx="6" fill="url(#screenGloss)" />
+              <path d="M90 346L208 346" stroke="#fff" strokeWidth="1" strokeOpacity="0.1" />
+            </g>
           </defs>
-          <ellipse cx="180" cy="217" rx="150" ry="10" fill="#000" opacity=".72" />
-          <ellipse cx="180" cy="208" rx="108" ry="7" fill="#ff1f3a" opacity=".28" filter="url(#gl)" />
-          <g className="cb">
-            {/* Front-facing red Formula 1 car, based on the first supplied reference. */}
-            <rect x="32" y="94" width="68" height="95" rx="23" fill="url(#tr)" stroke="#5b606c" strokeWidth="2" />
-            <rect x="260" y="94" width="68" height="95" rx="23" fill="url(#tr)" stroke="#5b606c" strokeWidth="2" />
-            <path d="M40 118h52M40 137h52M40 156h52M268 118h52M268 137h52M268 156h52" stroke="#050507" strokeWidth="2" />
-            <path d="M96 116L126 64Q140 42 158 34H202Q220 42 234 64L264 116 238 160H122Z" fill="url(#bd)" stroke="#777d89" strokeWidth="1.5" />
-            <path d="M133 88L150 39H210L227 88 208 114H152Z" fill="url(#cc)" />
-            <path d="M150 48Q180 23 210 48L204 75H156Z" fill="#0c1117" stroke="#9beeff" strokeOpacity=".6" />
-            <path d="M158 51Q180 37 202 51" stroke="#bdf6ff" strokeOpacity=".58" strokeWidth="2" fill="none" />
-            <path d="M136 68L114 122M224 68L246 122" stroke="#ff2a43" strokeWidth="6" />
-            <path d="M136 68L114 122M224 68L246 122" stroke="#c9fbff" strokeOpacity=".5" strokeWidth="1.2" />
-            <path d="M147 96H213L225 149H135Z" fill="#bc162c" />
-            <path d="M161 99H199L208 151H152Z" fill="#11131a" />
-            <path d="M173 102H187L192 174H168Z" fill="#d72539" />
-            <path d="M176 105H184L187 166H173Z" fill="#e8edf0" opacity=".8" />
-            <path d="M68 168H292L326 203H34Z" fill="#08090d" stroke="#626875" strokeWidth="2" />
-            <path d="M39 193H321" stroke="#ff1f3a" strokeWidth="7" filter="url(#gl)" className="tl" />
-            <path d="M48 190H312" stroke="url(#lb)" strokeWidth="4" />
-            <path d="M54 176L118 162M306 176L242 162" stroke="#c51e34" strokeWidth="5" />
-            <path d="M96 180L128 165M264 180L232 165" stroke="#9df0ff" strokeOpacity=".45" strokeWidth="1.5" />
-            <path d="M119 203H241" stroke="#c9faff" strokeOpacity=".55" strokeWidth="1.5" />
+
+          <use href="#arms" />
+          <use href="#arms" transform="translate(1000 0) scale(-1 1)" />
+          <use href="#tyre" />
+          <use href="#tyre" transform="translate(1000 0) scale(-1 1)" />
+
+          <path d="M478 250Q500 240 522 250Q620 390 810 520H190Q380 390 478 250Z" fill="url(#bodyRed)" />
+          <path d="M478 250Q500 240 522 250Q620 390 810 520H190Q380 390 478 250Z" fill="url(#paintGloss)" />
+          
+          <path d="M500 245V520" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="3" />
+          <path d="M497 245V520M503 245V520" stroke="#000" strokeOpacity="0.15" strokeWidth="1" />
+          
+          <path d="M488 262Q430 400 380 520M512 262Q570 400 620 520" stroke="#000" strokeOpacity="0.4" strokeWidth="2" fill="none" />
+          <path d="M489 262Q431 400 381 520M511 262Q569 400 619 520" stroke="#fff" strokeOpacity="0.2" strokeWidth="1" fill="none" />
+          
+          <path d="M500 242V195" stroke="#aab0ba" strokeWidth="2.5" />
+          <circle cx="500" cy="193" r="3.5" fill="#e2e6eb" />
+
+          <g ref={glintRef} clipPath="url(#hoodClip)" />
+
+          <use href="#shoulder" />
+          <use href="#shoulder" transform="translate(1000 0) scale(-1 1)" />
+          <path d="M404 520Q410 430 448 410H552Q590 430 596 520Z" fill="#030304" stroke="#4a0004" strokeWidth="4" />
+          <path d="M404 520Q410 430 448 410H552Q590 430 596 520Z" fill="url(#shadowGradient)" />
+
+          <use href="#mirror" />
+          <use href="#mirror" transform="translate(1000 0) scale(-1 1)" />
+
+          <g id="steering-wheel">
+            <ellipse cx="385" cy="510" rx="35" ry="28" fill="url(#gloveShadow)" />
+            <ellipse cx="615" cy="510" rx="35" ry="28" fill="url(#gloveShadow)" />
+            
+            <path d="M400 450Q400 425 430 425H570Q600 425 600 450V520Q600 540 570 540H430Q400 540 400 520Z" fill="url(#carbon)" stroke="#1a1a1a" strokeWidth="3" />
+            
+            <path d="M400 450V520Q400 535 415 535V435Q400 435 400 450Z" fill="#141518" />
+            <path d="M600 450V520Q600 535 585 535V435Q600 435 600 450Z" fill="#141518" />
+
+            <rect x="445" y="440" width="110" height="50" rx="4" fill="#04121a" stroke="#2c3038" strokeWidth="2" />
+            <rect x="445" y="440" width="110" height="50" rx="4" fill="url(#screenGloss)" />
+            
+            <text x="500" y="475" fill="#fff" fontSize="24" fontFamily="monospace" fontWeight="bold" textAnchor="middle">8</text>
+            <rect x="455" y="450" width="40" height="4" fill="#00ff00" />
+            <rect x="455" y="458" width="30" height="4" fill="#00ff00" />
+            <rect x="505" y="450" width="40" height="4" fill="#ff0000" />
+            <rect x="515" y="458" width="30" height="4" fill="#ff0000" />
+            <text x="455" y="480" fill="#0ff" fontSize="8" fontFamily="sans-serif">SPEED 312</text>
+            <text x="545" y="480" fill="#ff0" fontSize="8" fontFamily="sans-serif" textAnchor="end">LAP 42</text>
+
+            <circle cx="440" cy="433" r="3" fill="#0f0" />
+            <circle cx="455" cy="433" r="3" fill="#0f0" />
+            <circle cx="470" cy="433" r="3" fill="#0f0" />
+            <circle cx="485" cy="433" r="3" fill="#ff0" />
+            <circle cx="500" cy="433" r="3" fill="#ff0" />
+            <circle cx="515" cy="433" r="3" fill="#ff0" />
+            <circle cx="530" cy="433" r="3" fill="#f00" />
+            <circle cx="545" cy="433" r="3" fill="#f00" />
+            <circle cx="560" cy="433" r="3" fill="#f00" />
+
+            <circle cx="430" cy="470" r="10" fill="#1a1a1a" stroke="#444" strokeWidth="2" />
+            <circle cx="430" cy="470" r="6" fill="#e0182d" />
+            <path d="M430 470L426 466" stroke="#fff" strokeWidth="2" />
+            
+            <circle cx="430" cy="505" r="10" fill="#1a1a1a" stroke="#444" strokeWidth="2" />
+            <circle cx="430" cy="505" r="6" fill="#ffd400" />
+            <path d="M430 505L434 501" stroke="#fff" strokeWidth="2" />
+
+            <circle cx="570" cy="470" r="10" fill="#1a1a1a" stroke="#444" strokeWidth="2" />
+            <circle cx="570" cy="470" r="6" fill="#2f7bff" />
+            <path d="M570 470L574 466" stroke="#fff" strokeWidth="2" />
+            
+            <circle cx="570" cy="505" r="10" fill="#1a1a1a" stroke="#444" strokeWidth="2" />
+            <circle cx="570" cy="505" r="6" fill="#2ecc71" />
+            <path d="M570 505L566 501" stroke="#fff" strokeWidth="2" />
+
+            <circle cx="500" cy="510" r="14" fill="#1a1a1a" stroke="#444" strokeWidth="2" />
+            <circle cx="500" cy="510" r="8" fill="#e0182d" />
+            <path d="M500 510V498" stroke="#fff" strokeWidth="2" />
           </g>
         </svg>
 
-        {/* Dynamic Event Panels */}
         {allEvents.map((event, index) => (
           <section
             key={`${event.clubName}-${event.id}-${index}`}
@@ -399,22 +650,32 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
             }}
             className="absolute left-1/2 top-[14vh] w-[min(720px,88vw)] p-7 border border-[var(--line)] rounded-2xl bg-[var(--glass)] backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)] opacity-0 will-change-transform"
           >
-            {/* Display Club Name alongside the event info */}
             <div className="flex items-center gap-3 mb-2">
               {event.clubLogo && (
-                 /* eslint-disable-next-line @next/next/no-img-element */
-                 <img src={event.clubLogo} alt={`${event.clubName} Logo`} className="w-6 h-6 object-contain mix-blend-screen" />
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={event.clubLogo}
+                  alt={`${event.clubName} Logo`}
+                  className="w-6 h-6 object-contain mix-blend-screen"
+                />
               )}
               <small className="text-[#b03a3f] text-xs tracking-[3px] uppercase">
                 {event.clubName} &middot; {event.number} &middot; {event.category}
               </small>
             </div>
-            
-            <h2 className="my-1.5 text-[clamp(24px,4vw,40px)] tracking-widest">{event.title}</h2>
-            <p className="m-0 text-[#a9a9b3] leading-relaxed">{event.description}</p>
+
+            <h2 className="my-1.5 text-[clamp(24px,4vw,40px)] tracking-widest">
+              {event.title}
+            </h2>
+            <p className="m-0 text-[#a9a9b3] leading-relaxed">
+              {event.description}
+            </p>
             <div className="flex flex-wrap gap-2 mt-3.5">
               {event.tags.map((tag, tagIdx) => (
-                <span key={tagIdx} className="px-2.5 py-1 border border-[var(--line)] rounded-full text-xs">
+                <span
+                  key={tagIdx}
+                  className="px-2.5 py-1 border border-[var(--line)] rounded-full text-xs"
+                >
                   {tag}
                 </span>
               ))}
@@ -422,23 +683,26 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
           </section>
         ))}
 
-        {/* Progress Dots */}
-        <div id="dots" className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2.5">
+        <div
+          id="dots"
+          className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2.5"
+        >
           {allEvents.map((_, idx) => (
             <b
               key={idx}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                activeDotIndex === idx ? "bg-[#b03a3f] scale-150" : "bg-[#555]"
+                activeDotIndex === idx
+                  ? "bg-[#b03a3f] scale-150"
+                  : "bg-[#555]"
               }`}
             />
           ))}
         </div>
 
-        {/* Scroll Hint */}
         <div
           ref={hintRef}
           id="hint"
-          className="absolute left-1/2 bottom-[calc(14px+env(safe-area-inset-bottom,0px))] -translate-x-1/2 text-[#a9a9b3] text-[11px] tracking-[4px]"
+          className="absolute left-1/2 bottom-[calc(14px+env(safe-area-inset-bottom,0px))] -translate-x-1/2 text-[#a9a9b3] text-[11px] tracking-[4px] z-10"
         >
           SCROLL TO RACE
         </div>
