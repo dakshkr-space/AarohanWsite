@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --red: #b03a3f;
+  --glass: rgba(170, 170, 180, 0.13);
+  --line: rgba(255, 255, 255, 0.22);
+  --text: #e9e9ee;
+  --muted: #a9a9b3;
+}
+
+body {
+  margin: 0;
+  background-color: #050505;
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Car Animations */
+.cb {
+  animation: vibrate 0.12s linear infinite alternate;
+}
+
+.tl {
+  animation: pulse-glow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes vibrate {
+  to {
+    transform: translateY(-0.8px);
+  }
+}
+
+@keyframes pulse-glow {
+  from {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb,
+  .tl {
+    animation: none;
+  }
+}
