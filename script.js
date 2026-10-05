@@ -92,15 +92,91 @@ function update() {
   });
 }
 
+// Wind: thin streaks rush outward from the horizon toward the viewer.
+// Their strength follows how fast the page is being scrolled, so nothing shows at rest.
+const canvas = document.getElementById("wind");
+const ctx = canvas.getContext("2d");
+const STREAKS = 90;
+const streaks = [];
+let wind = 0;          // current strength, 0 to 1
+let lastY = window.scrollY;
+let windRunning = false;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function sizeCanvas() {
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width  = window.innerWidth * ratio;
+  canvas.height = window.innerHeight * ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
+function newStreak(spread) {
+  return {
+    angle: Math.random() * Math.PI * 2,
+    t: spread ? Math.random() : 0,          // 0 at the horizon, 1 at the screen edge
+    speed: 0.5 + Math.random() * 0.9,
+    length: 0.06 + Math.random() * 0.14,
+    width: 0.6 + Math.random() * 1.1,
+    alpha: 0.25 + Math.random() * 0.45
+  };
+}
+for (let i = 0; i < STREAKS; i++) streaks.push(newStreak(true));
+
+function drawWind() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const cx = w / 2, cy = h * 0.64;                  // streaks start near the horizon
+  const reach = Math.hypot(w, h) * 0.62;
+
+  // Ease the strength toward the current scroll speed, then let it die down after scrolling stops
+  const speed = Math.abs(window.scrollY - lastY);
+  lastY = window.scrollY;
+  wind += (clamp(speed / 45) - wind) * (speed > 0 ? 0.18 : 0.06);
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.lineCap = "round";
+
+  streaks.forEach(s => {
+    s.t += s.speed * (0.004 + wind * 0.05);
+    if (s.t > 1) Object.assign(s, newStreak(false));
+
+    const head = s.t * s.t;                          // accelerates toward the viewer
+    const tail = Math.max(0, s.t - s.length * (0.4 + wind)) ** 2;
+    const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
+    const alpha = s.alpha * wind * Math.min(1, s.t * 2.5) * (1 - Math.max(0, s.t - 0.85) * 5);
+
+    ctx.strokeStyle = `rgba(215, 210, 222, ${Math.max(0, alpha)})`;
+    ctx.lineWidth = s.width * (0.5 + s.t);
+    ctx.beginPath();
+    ctx.moveTo(cx + cos * tail * reach, cy + sin * tail * reach);
+    ctx.lineTo(cx + cos * head * reach, cy + sin * head * reach);
+    ctx.stroke();
+  });
+
+  if (wind > 0.01) {
+    requestAnimationFrame(drawWind);
+  } else {
+    windRunning = false;
+    ctx.clearRect(0, 0, w, h);
+  }
+}
+
+function startWind() {
+  if (reduceMotion || windRunning) return;
+  windRunning = true;
+  requestAnimationFrame(drawWind);
+}
+
 let waiting = false;
 function onScroll() {
   if (waiting) return;
   waiting = true;
   requestAnimationFrame(() => { update(); waiting = false; });
+  startWind();
 }
 
 window.addEventListener("scroll", onScroll, { passive: true });
-window.addEventListener("resize", () => { placeLogo(); update(); });
+window.addEventListener("resize", () => { placeLogo(); sizeCanvas(); update(); });
 
 placeLogo();
+sizeCanvas();
 update();
