@@ -14,7 +14,8 @@ const HORIZON_Y = 532;          // y of the vanishing point in the 1088 x 780 im
 const BOTTOM_Y  = 780;
 const CENTER_X  = 544;
 
-const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+const clamp  = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+const smooth = t => t * t * (3 - 2 * t);
 
 // Create the lane dashes once, then only update their points on scroll
 const dashShapes = [];
@@ -58,27 +59,31 @@ function update() {
     shape.setAttribute("opacity", clamp(t * 3) * clamp(progress * 12));
   });
 
-  // Background zooms toward the horizon
-  road.style.transform = `scale(${1 + progress * 0.3})`;
+  // Camera: the first part of the scroll dollies in toward the car (chase-cam view),
+  // then the view keeps pushing forward slowly for the rest of the race.
+  const intro = smooth(clamp(progress / 0.08));
+  road.style.transform = `scale(${1 + intro * 0.2 + progress * 0.2})`;
 
   hint.style.opacity = clamp(1 - progress * 10);
 
-  // Car sways, tilts and shrinks as it drives away
-  const wave = progress * PANELS * Math.PI * 2;
+  // Car holds its place in front of the camera, banking into the turns with a little road shake
+  const wave  = progress * PANELS * Math.PI * 2;
+  const shake = Math.sin(progress * 900) * 0.7 * intro;
   car.style.transform =
-    `translateX(calc(-50% + ${Math.sin(wave) * 5}vw)) ` +
-    `translateY(${-progress * 14}vh) ` +
-    `scale(${1 - progress * 0.35}) ` +
+    `translateX(calc(-50% + ${Math.sin(wave) * 4}vw)) ` +
+    `translateY(${intro * 1.5 + shake}px) ` +
+    `scale(${1 + intro * 0.18}) ` +
     `rotate(${Math.cos(wave) * 2.5}deg)`;
 
-  // Each panel is centred on its own part of the scroll and hidden at the very top
+  // Each panel rises from the horizon toward the camera, then passes overhead
   panels.forEach((panel, i) => {
-    const distance = section - (i + 0.5);
+    const distance = section - (i + 0.5);        // -0.5 far away, 0 in front, +0.5 passed
     const away     = Math.abs(distance);
     const opacity  = clamp(1.1 - away * 2.2) * clamp(progress * 40);
 
     panel.style.opacity = opacity;
-    panel.style.transform = `translate(-50%, ${distance * -70}px) scale(${1 - away * 0.18})`;
+    panel.style.transform =
+      `translate(-50%, ${-distance * 40}vh) scale(${1 + distance * 0.9})`;
     panel.style.pointerEvents = opacity > 0.5 ? "auto" : "none";
   });
 
