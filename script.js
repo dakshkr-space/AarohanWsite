@@ -61,8 +61,12 @@ function update() {
 
   // Camera: the first part of the scroll dollies in toward the car (chase-cam view),
   // then the view keeps pushing forward slowly for the rest of the race.
-  const intro = smooth(clamp(progress / 0.08));
-  road.style.transform = `scale(${1 + intro * 0.2 + progress * 0.2})`;
+  // The zoom is spread over the whole scroll. Part of it eases in over the first
+  // stretch and the rest grows steadily, so the first scroll is not a big jump.
+  // Total zoom stays at 1.4x so the background keeps its sharpness.
+  const intro = smooth(clamp(progress / 0.12));
+  const zoom  = 0.45 * intro + 0.55 * progress;
+  road.style.transform = `scale(${1 + zoom * 0.4})`;
 
   hint.style.opacity = clamp(1 - progress * 10);
 
@@ -72,7 +76,7 @@ function update() {
   car.style.transform =
     `translateX(calc(-50% + ${Math.sin(wave) * 4}vw)) ` +
     `translateY(${intro * 1.5 + shake}px) ` +
-    `scale(${1 + intro * 0.18}) ` +
+    `scale(${1 + zoom * 0.3}) ` +
     `rotate(${Math.cos(wave) * 2.5}deg)`;
 
   // Each panel rises from the horizon toward the camera, then passes overhead
