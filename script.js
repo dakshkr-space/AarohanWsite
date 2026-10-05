@@ -63,20 +63,21 @@ function update() {
   // then the view keeps pushing forward slowly for the rest of the race.
   // The zoom is spread over the whole scroll. Part of it eases in over the first
   // stretch and the rest grows steadily, so the first scroll is not a big jump.
-  // Total zoom stays at 1.4x so the background keeps its sharpness.
+  // Total zoom stays at about 1.46x so the background keeps its sharpness.
   const intro = smooth(clamp(progress / 0.12));
-  const zoom  = 0.45 * intro + 0.55 * progress;
-  road.style.transform = `scale(${1 + zoom * 0.4})`;
+  const zoom  = 0.5 * intro + 0.5 * progress;
+  const midBoost = 0.07 * Math.sin(progress * Math.PI);   // extra push around the middle, none at either end
+  road.style.transform = `scale(${1 + zoom * 0.4 + midBoost})`;
 
   hint.style.opacity = clamp(1 - progress * 10);
 
-  // Car holds its place in front of the camera, banking into the turns with a little road shake
+  // Car moves a little forward up the road while the track logo slides back toward the camera, banking into the turns with a little road shake
   const wave  = progress * PANELS * Math.PI * 2;
   const shake = Math.sin(progress * 900) * 0.7 * intro;
   car.style.transform =
     `translateX(calc(-50% + ${Math.sin(wave) * 4}vw)) ` +
-    `translateY(${intro * 1.5 + shake}px) ` +
-    `scale(${1 + zoom * 0.3}) ` +
+    `translateY(calc(${-intro * 13}vh + ${shake}px)) ` +
+    `scale(${1 + zoom * 0.2 - intro * 0.08}) ` +
     `rotate(${Math.cos(wave) * 2.5}deg)`;
 
   // Each panel rises from the horizon toward the camera, then passes overhead
