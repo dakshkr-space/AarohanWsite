@@ -103,12 +103,12 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
     ).matches;
 
     // ---------- Car glint setup ----------
-    const HOOD_TOP = 250;
-    const HOOD_BOTTOM = 520;
-    const HOOD_TOP_L = 478;
-    const HOOD_TOP_R = 522;
-    const HOOD_BOT_L = 190;
-    const HOOD_BOT_R = 810;
+    const HOOD_TOP = 236;
+    const HOOD_BOTTOM = 432;
+    const HOOD_TOP_L = 462;
+    const HOOD_TOP_R = 538;
+    const HOOD_BOT_L = 384;
+    const HOOD_BOT_R = 616;
     const GLINTS = 9;
     const glintGroup = glintRef.current;
     const glintShapes: SVGPolygonElement[] = [];
@@ -193,6 +193,7 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
     let lean = 0, leanV = 0; // body roll, deg
     let steer = 0, steerV = 0; // -1..1
     let heat = 0; // brake disc heat 0..1
+    let brake = 0; // brake-light intensity 0..1
     let blur = 0; // tyre motion-blur 0..1
     let speedN = 0; // 0..1
     let travel = 0;
@@ -201,6 +202,7 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
     let shownLeds = -1;
     let hudSpeed: Element | null = null;
     let leds: SVGElement[] = [];
+    let hudQueried = false;
 
     const varCache: Record<string, string> = {};
     const setVar = (el: SVGSVGElement, k: string, v: string) => {
@@ -261,6 +263,10 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
       const heatT = clamp(speedN * 0.55 + clamp(-g * 1.2) * 0.8);
       heat += (heatT - heat) * (1 - Math.exp(-dt * (heatT > heat ? 3 : 0.8)));
 
+      // brake light: on when decelerating, faint glow while coasting
+      const brakeT = clamp(-g * 2.5);
+      brake += (brakeT - brake) * (1 - Math.exp(-dt * 14));
+
       carTurn += (drive - carTurn) * (1 - Math.exp(-dt * 4.4));
     };
 
@@ -282,8 +288,10 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
 
       // The car stays planted in frame: the road bends around it, so only a
       // hint of yaw/roll remains (the steering wheel and front tyres still turn).
-      const yaw = carTurn * 8;
-      const sway = carTurn * (1.5 + speedN * 2.0); // positive to sway into the corner
+      // The whole car is visible, so it visibly rotates into each bend:
+      // body yaw (rotateY) + lateral swing, plus parallax inside the SVG.
+      const yaw = clamp(carTurn, -1.2, 1.2) * 22;
+      const sway = carTurn * (3.5 + speedN * 3.0); // vw, swings into the corner
       const rollDeg = lean + buzzX * 0.2 + gust * 0.3;
       const scale = 1 + progress * 0.03 + speedN * 0.025;
       const rise = (1 - intro) * 5;
@@ -306,11 +314,18 @@ export const CarAnimation: React.FC<CarAnimationProps> = ({ clubs }) => {
       );
       setVar(car, "--unsprung", (-heave * 0.45).toFixed(2)); // tyres lag the body
       setVar(car, "--heat", heat.toFixed(2));
+      setVar(car, "--brake", brake.toFixed(2));
+      const yn = clamp(carTurn, -1, 1);
+      setVar(car, "--yaw-n", yn.toFixed(3));
+      setVar(car, "--side-l", clamp(yn * 1.4).toFixed(3)); // turning right -> left side shows
+      setVar(car, "--side-r", clamp(-yn * 1.4).toFixed(3)); // turning left -> right side shows
 
       // HUD: live speed + shift lights
-      if (!hudSpeed) hudSpeed = car.querySelector("#hud-speed");
-      if (leds.length === 0)
+      if (!hudQueried) {
+        hudQueried = true;
+        hudSpeed = car.querySelector("#hud-speed");
         leds = Array.from(car.querySelectorAll<SVGElement>(".shift-led"));
+      }
       const kmh = Math.round((speedN * 326) / 2) * 2;
       if (hudSpeed && kmh !== shownKmh) {
         shownKmh = kmh;

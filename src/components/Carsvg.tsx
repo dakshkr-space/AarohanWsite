@@ -1,26 +1,54 @@
 import React from "react";
 
 /**
- * Photoreal-style first-person single-seater (cockpit POV).
- * Props/ids kept compatible with CarAnimation (carRef, glintRef, hoodClip,
- * .tyre-roll classes, hood geometry used by the glint effect).
+ * Full single-seater seen from BEHIND (chase camera) - the whole car is visible:
+ * rear wing, helmet + halo, engine cover, sidepods, diffuser, rear tyres and the
+ * front tyres / front wing peeking out on either side.
+ *
+ * Props / ids are kept compatible with CarAnimation (carRef, glintRef, hoodClip,
+ * --roll-offset, --roll-blur, --spin, --steer-n, --unsprung, --heat).
+ *
+ * New CSS variables written by CarAnimation (all optional, default to 0):
+ *   --yaw-n   -1..1  how far the car is rotated into a corner (drives parallax:
+ *                    rear wing swings one way, front wing/tyres the other)
+ *   --side-l  0..1   amount of the car's LEFT side revealed  (turning right)
+ *   --side-r  0..1   amount of the car's RIGHT side revealed (turning left)
+ *   --brake   0..1   brake-light intensity
  */
 interface CarSvgProps {
   carRef: React.RefObject<SVGSVGElement | null>;
   glintRef: React.RefObject<SVGGElement | null>;
 }
 
-const HOOD = "M478 250Q500 238 522 250Q620 390 810 520H190Q380 390 478 250Z";
-const POD = "M136 520Q150 410 262 392L370 410Q396 460 414 520Z";
+// Engine cover - the glint effect in CarAnimation is clipped to this shape
+const ENGINE = "M462 236H538Q566 330 616 432H384Q434 330 462 236Z";
 const MIRROR_FLIP = "translate(1000 0) scale(-1 1)";
+
+// parallax groups: nearest parts swing the most, farthest swing the opposite way
+const REAR_WING_SHIFT: React.CSSProperties = {
+  transform: "translate(calc(var(--yaw-n, 0) * -18px), calc(var(--unsprung, 0) * -0.3px))",
+};
+const REAR_TYRE_SHIFT: React.CSSProperties = {
+  transform: "translate(calc(var(--yaw-n, 0) * -10px), calc(var(--unsprung, 0) * 1px))",
+};
+const BODY_SHIFT: React.CSSProperties = {
+  transform: "translate(calc(var(--yaw-n, 0) * -4px), 0)",
+};
+const FRONT_SHIFT: React.CSSProperties = {
+  transform: "translate(calc(var(--yaw-n, 0) * 32px), 0)",
+};
+const FRONT_TYRE_SHIFT: React.CSSProperties = {
+  transform:
+    "translate(calc(var(--steer-n, 0) * 7px + var(--yaw-n, 0) * 32px), calc(var(--unsprung, 0) * 0.6px))",
+};
 
 export const CarSvg: React.FC<CarSvgProps> = ({ carRef, glintRef }) => (
   <svg
     ref={carRef}
     id="car"
-    viewBox="0 0 1000 520"
+    viewBox="0 80 1000 440"
     aria-hidden="true"
-    className="absolute left-1/2 bottom-[1vh] z-[5] w-[min(62vw,780px)] min-w-[440px] origin-[50%_100%] will-change-transform pointer-events-none drop-shadow-[0_24px_40px_rgba(0,0,0,0.9)]"
+    className="absolute left-1/2 bottom-[1vh] z-[5] w-[min(66vw,840px)] min-w-[420px] origin-[50%_100%] will-change-transform pointer-events-none drop-shadow-[0_20px_30px_rgba(0,0,0,0.85)]"
   >
     <defs>
       {/* carbon twill */}
@@ -33,24 +61,21 @@ export const CarSvg: React.FC<CarSvgProps> = ({ carRef, glintRef }) => (
 
       {/* deep metallic crimson */}
       <linearGradient id="paint" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor="#140305" />
-        <stop offset="0.16" stopColor="#4a0a12" />
-        <stop offset="0.38" stopColor="#7d1220" />
-        <stop offset="0.5" stopColor="#92162a" />
-        <stop offset="0.62" stopColor="#7d1220" />
-        <stop offset="0.84" stopColor="#4a0a12" />
-        <stop offset="1" stopColor="#140305" />
+        <stop offset="0" stopColor="#2a060b" />
+        <stop offset="0.2" stopColor="#6a0f1c" />
+        <stop offset="0.5" stopColor="#a31a2f" />
+        <stop offset="0.8" stopColor="#6a0f1c" />
+        <stop offset="1" stopColor="#2a060b" />
       </linearGradient>
-      {/* clearcoat: sky reflection top, ground bounce bottom */}
       <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#cfd8ea" stopOpacity="0.42" />
-        <stop offset="0.16" stopColor="#cfd8ea" stopOpacity="0.07" />
-        <stop offset="0.5" stopColor="#000" stopOpacity="0" />
-        <stop offset="1" stopColor="#000" stopOpacity="0.78" />
+        <stop offset="0" stopColor="#cfd8ea" stopOpacity="0.4" />
+        <stop offset="0.18" stopColor="#cfd8ea" stopOpacity="0.07" />
+        <stop offset="0.55" stopColor="#000" stopOpacity="0" />
+        <stop offset="1" stopColor="#000" stopOpacity="0.7" />
       </linearGradient>
       <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stopColor="#000" stopOpacity="0" />
-        <stop offset="1" stopColor="#000" stopOpacity="0.95" />
+        <stop offset="1" stopColor="#000" stopOpacity="0.9" />
       </linearGradient>
       <radialGradient id="spec" cx="0.5" cy="0.1" r="0.55">
         <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
@@ -58,33 +83,38 @@ export const CarSvg: React.FC<CarSvgProps> = ({ carRef, glintRef }) => (
       </radialGradient>
 
       <linearGradient id="rubber" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor="#030304" />
-        <stop offset="0.45" stopColor="#17181c" />
-        <stop offset="1" stopColor="#050506" />
+        <stop offset="0" stopColor="#050506" />
+        <stop offset="0.35" stopColor="#1a1b20" />
+        <stop offset="0.7" stopColor="#121317" />
+        <stop offset="1" stopColor="#040405" />
       </linearGradient>
-      <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#202226" />
-        <stop offset="1" stopColor="#08080a" />
-      </linearGradient>
-      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#6d727c" />
-        <stop offset="0.5" stopColor="#2b2e35" />
-        <stop offset="1" stopColor="#101114" />
+      <linearGradient id="wall" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor="#0a0a0c" />
+        <stop offset="1" stopColor="#25272c" />
       </linearGradient>
       <linearGradient id="titanium" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#aab0ba" />
+        <stop offset="0" stopColor="#b5bbc5" />
         <stop offset="0.45" stopColor="#5c616b" />
         <stop offset="1" stopColor="#23262c" />
       </linearGradient>
-      <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#6f7f96" stopOpacity="0.55" />
-        <stop offset="0.5" stopColor="#1a212c" stopOpacity="0.85" />
-        <stop offset="1" stopColor="#07090d" />
+      <linearGradient id="helmet" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#f4f4f6" />
+        <stop offset="0.6" stopColor="#c3c6cd" />
+        <stop offset="1" stopColor="#6c7079" />
       </linearGradient>
-      <radialGradient id="disc" cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0.6" stopColor="#ff5a1f" stopOpacity="0" />
-        <stop offset="0.85" stopColor="#ff5a1f" stopOpacity="0.5" />
+      <radialGradient id="taillight" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stopColor="#ff4455" stopOpacity="0.95" />
+        <stop offset="0.45" stopColor="#ff2233" stopOpacity="0.4" />
+        <stop offset="1" stopColor="#ff2233" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="exhaust" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stopColor="#ffb347" stopOpacity="0.95" />
+        <stop offset="0.5" stopColor="#ff5a1f" stopOpacity="0.45" />
         <stop offset="1" stopColor="#ff5a1f" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="ground" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stopColor="#000" stopOpacity="0.75" />
+        <stop offset="1" stopColor="#000" stopOpacity="0" />
       </radialGradient>
 
       <filter id="grain" x="0" y="0" width="100%" height="100%">
@@ -93,190 +123,197 @@ export const CarSvg: React.FC<CarSvgProps> = ({ carRef, glintRef }) => (
         <feComposite in2="SourceGraphic" operator="in" />
       </filter>
       <filter id="led" x="-100%" y="-100%" width="300%" height="300%">
-        <feGaussianBlur stdDeviation="1.6" result="b" />
+        <feGaussianBlur stdDeviation="2.2" result="b" />
         <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
       </filter>
 
-      <clipPath id="hoodClip"><path d={HOOD} /></clipPath>
+      {/* engine cover - glints are clipped to this */}
+      <clipPath id="hoodClip"><path d={ENGINE} /></clipPath>
 
-      {/* ---- front tyre + wheel ---- */}
-      <g id="tyre">
-        <path d="M18 298Q18 245 78 240L190 230Q232 233 240 286L246 488Q242 528 192 534L70 534Q16 528 13 478Z" fill="url(#rubber)" />
-        <path d="M18 298Q18 245 78 240L190 230Q232 233 240 286L246 488Q242 528 192 534L70 534Q16 528 13 478Z" fill="#fff" filter="url(#grain)" opacity="0.08" />
-        {/* shoulder / sidewall */}
-        <path d="M76 240L190 230Q230 233 236 282Q138 312 33 302Q28 252 76 240Z" fill="url(#wall)" />
-        {/* compound band + marking */}
-        <path d="M60 262Q128 272 212 254" stroke="#b3141f" strokeWidth="3" strokeLinecap="round" fill="none" />
-        <text x="104" y="291" fill="#8d9199" fontSize="10" fontFamily="Helvetica, Arial, sans-serif" fontWeight="600" letterSpacing="3" transform="rotate(10 104 291)">SOFT · C3</text>
+      {/* ---- rear tyre (left); right one is mirrored ---- */}
+      <g id="rtyre">
+        <rect x="170" y="270" width="140" height="238" rx="26" fill="url(#rubber)" />
+        <rect x="170" y="270" width="140" height="238" rx="26" fill="#fff" filter="url(#grain)" opacity="0.08" />
+        {/* shoulder + compound band */}
+        <path d="M176 302Q176 274 204 272H276Q304 274 304 302Q240 318 176 302Z" fill="url(#wall)" opacity="0.9" />
+        <path d="M188 294Q240 306 294 294" stroke="#b3141f" strokeWidth="3" strokeLinecap="round" fill="none" />
         {/* circumferential grooves */}
-        <path d="M58 318Q64 430 94 522M108 314Q114 430 138 526M158 312Q162 430 180 528" stroke="#000" strokeOpacity="0.9" strokeWidth="3" fill="none" />
-        <path d="M61 318Q67 430 97 522M111 314Q117 430 141 526M161 312Q165 430 183 528" stroke="#fff" strokeOpacity="0.06" strokeWidth="1" fill="none" />
-        {/* rolling tread: driven by --roll-offset (accumulated from scroll speed).
-            Crisp lugs at low speed, cross-fading into motion-blur streaks at high speed. */}
+        <path d="M212 322V504M240 322V506M268 322V504" stroke="#000" strokeOpacity="0.9" strokeWidth="3" fill="none" />
+        <path d="M215 322V504M243 322V506M271 322V504" stroke="#fff" strokeOpacity="0.06" strokeWidth="1" fill="none" />
+        {/* rolling tread: scrolls UP the tyre face as the car pulls away */}
         <g style={{ opacity: "calc(1 - var(--roll-blur, 0))" }}>
-          <path d="M28 326Q38 430 70 514M83 322Q90 430 116 518M133 318Q138 430 158 522M185 316Q188 430 203 524" stroke="#000" strokeOpacity="0.75" strokeWidth="8" fill="none" strokeDasharray="20 22" style={{ strokeDashoffset: "var(--roll-offset, 0)" }} />
-          <path d="M40 330Q50 430 84 514M150 316Q155 430 176 524" stroke="#2a2c31" strokeWidth="2" fill="none" strokeDasharray="14 26" style={{ strokeDashoffset: "var(--roll-offset, 0)" }} />
+          <path d="M192 322V504M226 322V506M254 322V506M286 322V504" stroke="#000" strokeOpacity="0.75" strokeWidth="9" fill="none" strokeDasharray="20 22" style={{ strokeDashoffset: "calc(var(--roll-offset, 0px) * -1)" }} />
+          <path d="M200 322V504M278 322V504" stroke="#2a2c31" strokeWidth="2" fill="none" strokeDasharray="14 26" style={{ strokeDashoffset: "calc(var(--roll-offset, 0px) * -1)" }} />
         </g>
         <g style={{ opacity: "var(--roll-blur, 0)" }}>
-          <path d="M28 326Q38 430 70 514M83 322Q90 430 116 518M133 318Q138 430 158 522M185 316Q188 430 203 524" stroke="#23252a" strokeOpacity="0.55" strokeWidth="9" fill="none" strokeDasharray="110 30" style={{ strokeDashoffset: "var(--roll-offset, 0)" }} />
-          <path d="M55 322Q64 430 98 516M108 318Q114 430 140 520M160 316Q164 430 182 522" stroke="#000" strokeOpacity="0.5" strokeWidth="14" fill="none" strokeDasharray="70 50" style={{ strokeDashoffset: "var(--roll-offset, 0)" }} />
+          <path d="M192 322V504M226 322V506M254 322V506M286 322V504" stroke="#23252a" strokeOpacity="0.55" strokeWidth="10" fill="none" strokeDasharray="110 30" style={{ strokeDashoffset: "calc(var(--roll-offset, 0px) * -1)" }} />
+          <path d="M212 322V504M240 322V506M268 322V504" stroke="#000" strokeOpacity="0.5" strokeWidth="14" fill="none" strokeDasharray="70 50" style={{ strokeDashoffset: "calc(var(--roll-offset, 0px) * -1)" }} />
         </g>
-        {/* brake disc heat + forged rim */}
-        <ellipse cx="214" cy="410" rx="30" ry="78" fill="url(#disc)" style={{ opacity: "calc(0.3 + var(--heat, 0) * 0.7)" }} />
-        <ellipse cx="222" cy="410" rx="20" ry="70" fill="#0b0c0f" stroke="#3b3e46" strokeWidth="1.5" />
-        <ellipse cx="226" cy="410" rx="13" ry="56" fill="url(#rim)" stroke="#0a0a0c" strokeWidth="2" />
-        {/* rim turns about the axle: 5 spokes rotated in the wheel plane, squashed by the viewing angle */}
-        <g style={{ transform: "translate(226px,410px) scale(0.23,1) rotate(calc(var(--spin, 0) * 1deg))", opacity: "calc(1 - var(--roll-blur, 0) * 0.8)" }}>
-          {[0, 72, 144, 216, 288].map((a) => (
-            <line key={a} x1="0" y1="0" x2="0" y2="-50" transform={`rotate(${a})`} stroke="#14151a" strokeWidth="9" strokeLinecap="round" />
-          ))}
-        </g>
-        {/* spinning-disc sheen at speed */}
-        <ellipse cx="226" cy="410" rx="12" ry="52" fill="url(#rim)" style={{ opacity: "calc(var(--roll-blur, 0) * 0.65)" }} />
-        <circle cx="226" cy="410" r="6" fill="url(#titanium)" stroke="#000" strokeWidth="1.5" />
-        <path d="M18 298Q18 245 78 240L190 230" stroke="#fff" strokeOpacity="0.14" strokeWidth="1.6" fill="none" />
+        {/* edge light */}
+        <path d="M176 300V488" stroke="#fff" strokeOpacity="0.1" strokeWidth="1.6" fill="none" />
+        <path d="M176 302Q176 274 204 272H276" stroke="#fff" strokeOpacity="0.14" strokeWidth="1.6" fill="none" />
       </g>
 
-      {/* ---- suspension ---- */}
-      <g id="arms">
-        <path d="M232 292L372 388M232 350L372 418" stroke="#050506" strokeWidth="14" strokeLinecap="round" />
-        <path d="M232 292L372 388M232 350L372 418" stroke="url(#carbon)" strokeWidth="11" strokeLinecap="round" />
-        <path d="M232 289L372 385M232 347L372 415" stroke="#fff" strokeOpacity="0.16" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M238 322L342 348" stroke="url(#titanium)" strokeWidth="5" strokeLinecap="round" />
-        <circle cx="234" cy="293" r="6" fill="url(#titanium)" stroke="#0a0a0c" strokeWidth="1.2" />
-        <circle cx="234" cy="350" r="6" fill="url(#titanium)" stroke="#0a0a0c" strokeWidth="1.2" />
+      {/* ---- front tyre (left); right one is mirrored ---- */}
+      <g id="ftyre">
+        <rect x="100" y="380" width="58" height="108" rx="14" fill="url(#rubber)" />
+        <path d="M104 398Q104 384 118 382H140Q154 384 154 398Q129 406 104 398Z" fill="url(#wall)" opacity="0.9" />
+        <path d="M118 408V484M129 408V485M140 408V484" stroke="#000" strokeOpacity="0.9" strokeWidth="2.2" fill="none" />
+        <path d="M110 408V484M148 408V484" stroke="#000" strokeOpacity="0.6" strokeWidth="5" fill="none" strokeDasharray="12 14" style={{ strokeDashoffset: "calc(var(--roll-offset, 0px) * -1)" }} />
+        <path d="M104 396V478" stroke="#fff" strokeOpacity="0.1" strokeWidth="1.3" fill="none" />
       </g>
 
-      {/* ---- sidepod ---- */}
+      {/* ---- sidepod (left); right one is mirrored ---- */}
       <g id="pod">
-        <path d={POD} fill="url(#paint)" />
-        <path d={POD} fill="url(#coat)" />
-        <path d={POD} fill="url(#shade)" opacity="0.5" />
-        <path d="M300 436L384 452L392 520H318Z" fill="#050506" opacity="0.88" />
-        <path d="M304 452L388 468M308 474L392 490" stroke="#1d1f24" strokeWidth="3" />
-        <path d="M262 392L370 410" stroke="#e8c9ce" strokeOpacity="0.5" strokeWidth="1.8" />
-        <path d="M136 520Q150 410 262 392" stroke="#000" strokeOpacity="0.5" strokeWidth="2" fill="none" />
+        <path d="M420 318Q352 322 324 374L306 466Q312 484 342 486H426Z" fill="url(#paint)" />
+        <path d="M420 318Q352 322 324 374L306 466Q312 484 342 486H426Z" fill="url(#coat)" />
+        <path d="M420 318Q352 322 324 374L306 466Q312 484 342 486H426Z" fill="url(#shade)" opacity="0.4" />
+        {/* cooling outlet + louvres */}
+        <path d="M352 408L412 400V442L346 448Z" fill="#050506" opacity="0.92" />
+        <path d="M350 420L411 413M348 433L411 427" stroke="#1d1f24" strokeWidth="3" />
+        <path d="M420 318Q352 322 324 374" stroke="#f0d6da" strokeOpacity="0.5" strokeWidth="1.6" fill="none" />
       </g>
 
-      {/* ---- mirror ---- */}
-      <g id="mirror">
-        <path d="M212 352L292 398" stroke="url(#carbon)" strokeWidth="8" strokeLinecap="round" />
-        <rect x="96" y="318" width="124" height="54" rx="14" fill="url(#carbon)" />
-        <rect x="96" y="318" width="124" height="54" rx="14" fill="url(#coat)" opacity="0.5" />
-        <rect x="96" y="318" width="124" height="54" rx="14" fill="none" stroke="#000" strokeOpacity="0.7" strokeWidth="1.5" />
-        <rect x="106" y="327" width="104" height="36" rx="8" fill="url(#glass)" />
-        <path d="M112 356Q160 340 206 348" stroke="#fff" strokeOpacity="0.22" strokeWidth="1.2" fill="none" />
-        <path d="M96 340H220" stroke="#8f1020" strokeWidth="1.6" strokeOpacity="0.8" />
-      </g>
-
-      {/* ---- glove ---- */}
-      <g id="glove">
-        <path d="M356 514Q352 484 380 478Q412 474 424 496Q430 514 426 524H360Z" fill="#0c0c0e" />
-        <path d="M356 514Q352 484 380 478Q412 474 424 496" stroke="#2a2b30" strokeWidth="2" fill="none" />
-        <path d="M368 500Q390 494 414 502M366 512Q390 506 418 514" stroke="#000" strokeOpacity="0.8" strokeWidth="1.6" fill="none" />
-        <path d="M374 488Q392 482 410 489" stroke="#fff" strokeOpacity="0.1" strokeWidth="1.2" fill="none" />
+      {/* ---- rear-wing endplate (left); right one is mirrored ---- */}
+      <g id="endplate">
+        <path d="M316 206Q328 196 342 202V342Q328 352 316 346Z" fill="url(#carbon)" />
+        <path d="M316 206Q328 196 342 202V342Q328 352 316 346Z" fill="url(#coat)" opacity="0.5" />
+        <path d="M316 206Q328 196 342 202" stroke="#a31a2f" strokeWidth="3" fill="none" />
+        <path d="M320 214V338" stroke="#fff" strokeOpacity="0.14" strokeWidth="1.2" />
       </g>
     </defs>
 
-    {/* suspension + tyres */}
-    <use href="#arms" />
-    <use href="#arms" transform={MIRROR_FLIP} />
-    {/* tyres steer sideways with the wheel and lag the body over bumps (unsprung mass) */}
-    <g style={{ transform: "translate(calc(var(--steer-n, 0) * 8px), calc(var(--unsprung, 0) * 1px))" }}>
-      <use href="#tyre" />
-    </g>
-    <g style={{ transform: "translate(calc(var(--steer-n, 0) * 8px), calc(var(--unsprung, 0) * 1px))" }}>
-      <use href="#tyre" transform={MIRROR_FLIP} />
-    </g>
+    {/* ground contact shadow */}
+    <ellipse cx="500" cy="508" rx="440" ry="20" fill="url(#ground)" />
 
-    {/* nose + hood */}
-    <path d={HOOD} fill="url(#paint)" />
-    <path d={HOOD} fill="url(#coat)" />
-    <path d={HOOD} fill="url(#spec)" />
-    <g clipPath="url(#hoodClip)">
-      <path d="M489 245L452 520H470L497 245Z" fill="#e9e9ec" opacity="0.92" />
-      <path d="M511 245L548 520H530L503 245Z" fill="#e9e9ec" opacity="0.92" />
-      <path d="M190 520Q380 390 478 250L470 252Q372 392 176 520Z" fill="url(#carbon)" />
-      <path d="M810 520Q620 390 522 250L530 252Q628 392 824 520Z" fill="url(#carbon)" />
-      <path d="M478 250Q380 390 190 520" stroke="#fff" strokeOpacity="0.18" strokeWidth="1.2" fill="none" />
-      <path d="M522 250Q620 390 810 520" stroke="#fff" strokeOpacity="0.18" strokeWidth="1.2" fill="none" />
-      <path d={HOOD} fill="url(#shade)" opacity="0.35" />
+    {/* ============ FRONT END (far - peeks out beside the car, swings opposite the tail) ============ */}
+    <g style={FRONT_SHIFT}>
+      {/* front wing, mostly hidden behind the car */}
+      <path d="M60 474H940V492H60Z" fill="url(#carbon)" />
+      <path d="M60 474H940" stroke="#a31a2f" strokeWidth="2" />
+      <path d="M54 442Q62 436 70 442V494H54Z" fill="url(#carbon)" />
+      <path d="M930 442Q938 436 946 442V494H930Z" fill="url(#carbon)" />
+      <path d="M54 442Q62 436 70 442" stroke="#a31a2f" strokeWidth="2.5" fill="none" />
+      <path d="M930 442Q938 436 946 442" stroke="#a31a2f" strokeWidth="2.5" fill="none" />
+    </g>
+    <g style={FRONT_TYRE_SHIFT}>
+      <use href="#ftyre" />
+      <use href="#ftyre" transform={MIRROR_FLIP} />
     </g>
 
-    {/* race number decal */}
-    <rect x="474" y="326" width="52" height="40" rx="4" fill="#0b0b0d" opacity="0.92" />
-    <text x="500" y="358" fill="#f2f2f4" fontSize="32" fontFamily="'Helvetica Neue', Arial, sans-serif" fontWeight="800" textAnchor="middle">8</text>
-
-    {/* panel seams */}
-    <path d="M488 262Q432 400 380 520M512 262Q568 400 620 520" stroke="#000" strokeOpacity="0.45" strokeWidth="1.5" fill="none" />
-    <path d="M478 250Q500 238 522 250" stroke="#f0d6da" strokeOpacity="0.7" strokeWidth="1.5" fill="none" />
-
-    {/* glints */}
-    <g ref={glintRef} clipPath="url(#hoodClip)" />
-
-    {/* sidepods */}
-    <use href="#pod" />
-    <use href="#pod" transform={MIRROR_FLIP} />
-
-    {/* cockpit opening + padding */}
-    <path d="M398 520Q406 420 444 400H556Q594 420 602 520Z" fill="#020203" />
-    <path d="M398 520Q406 420 444 400H556Q594 420 602 520Z" fill="none" stroke="#1b1c20" strokeWidth="7" />
-    <path d="M404 516Q412 426 446 406" stroke="#8f1020" strokeOpacity="0.55" strokeWidth="1.5" fill="none" />
-    <path d="M398 520Q406 420 444 400H556Q594 420 602 520Z" fill="url(#shade)" />
-
-    {/* mirrors */}
-    <use href="#mirror" />
-    <use href="#mirror" transform={MIRROR_FLIP} />
-
-    {/* halo (titanium) */}
-    <g fill="none" strokeLinecap="round">
-      <path d="M404 474Q414 388 500 368Q586 388 596 474" stroke="#020203" strokeWidth="16" />
-      <path d="M404 474Q414 388 500 368Q586 388 596 474" stroke="url(#titanium)" strokeWidth="11" />
-      <path d="M411 452Q423 394 500 375" stroke="#fff" strokeOpacity="0.4" strokeWidth="1.4" />
-      <path d="M500 370V312" stroke="#020203" strokeWidth="14" />
-      <path d="M500 370V312" stroke="url(#titanium)" strokeWidth="9" />
-      <path d="M497 366V316" stroke="#fff" strokeOpacity="0.4" strokeWidth="1.2" />
-    </g>
-
-    {/* steering wheel (+ hands) rotates with --steer-deg */}
-    <g style={{ transformOrigin: "500px 484px", transform: "rotate(calc(var(--steer-deg, 0) * 1deg))" }}>
-      <use href="#glove" />
-      <use href="#glove" transform={MIRROR_FLIP} />
-      <path d="M394 446Q394 420 426 420H574Q606 420 606 446V524Q606 548 574 548H426Q394 548 394 524Z" fill="url(#carbon)" stroke="#050506" strokeWidth="3" />
-      <path d="M394 446Q394 420 426 420H574" stroke="#fff" strokeOpacity="0.16" strokeWidth="1.2" fill="none" />
-      <path d="M394 446V524Q394 540 410 540V430Q394 430 394 446Z" fill="#0a0a0c" />
-      <path d="M606 446V524Q606 540 590 540V430Q606 430 606 446Z" fill="#0a0a0c" />
-
-      {/* display */}
-      <rect x="440" y="436" width="120" height="54" rx="4" fill="#03070b" stroke="#23262c" strokeWidth="2" />
-      <text x="500" y="470" fill="#e9eef5" fontSize="28" fontFamily="'Courier New', monospace" fontWeight="700" textAnchor="middle">8</text>
-      <text x="448" y="450" fill="#7fa6c8" fontSize="7" fontFamily="Arial, sans-serif">LAP 42</text>
-      <text x="552" y="450" fill="#7fa6c8" fontSize="7" fontFamily="Arial, sans-serif" textAnchor="end">DELTA −0.21</text>
-      <text id="hud-speed" x="448" y="484" fill="#9aa3ad" fontSize="7" fontFamily="Arial, sans-serif">0 km/h</text>
-      <text x="552" y="484" fill="#9aa3ad" fontSize="7" fontFamily="Arial, sans-serif" textAnchor="end">P1</text>
-      <rect x="440" y="436" width="120" height="54" rx="4" fill="url(#glass)" opacity="0.35" />
-
-      {/* shift lights */}
-      <g filter="url(#led)">
-        {[
-          [434, "#2fd16b"], [451, "#2fd16b"], [468, "#2fd16b"],
-          [484, "#e6b400"], [500, "#e6b400"], [516, "#e6b400"],
-          [532, "#d6212b"], [549, "#d6212b"], [566, "#d6212b"],
-        ].map(([x, c]) => (
-          <circle key={x} className="shift-led" cx={x as number} cy="428" r="3" fill={c as string} style={{ opacity: 0.16 }} />
-        ))}
+    {/* ============ DRIVER + HALO (parallax: mid depth) ============ */}
+    <g style={BODY_SHIFT}>
+      {/* helmet */}
+      <ellipse cx="500" cy="150" rx="33" ry="35" fill="url(#helmet)" />
+      <path d="M470 140Q500 128 530 140" stroke="#a31a2f" strokeWidth="7" fill="none" strokeLinecap="round" />
+      <path d="M500 118V176" stroke="#a31a2f" strokeWidth="4" />
+      <ellipse cx="500" cy="150" rx="33" ry="35" fill="url(#shade)" opacity="0.35" />
+      <path d="M480 128Q500 118 520 128" stroke="#fff" strokeOpacity="0.55" strokeWidth="2" fill="none" />
+      {/* halo hoop around the helmet */}
+      <g fill="none" strokeLinecap="round">
+        <path d="M446 236Q448 116 500 104Q552 116 554 236" stroke="#020203" strokeWidth="15" />
+        <path d="M446 236Q448 116 500 104Q552 116 554 236" stroke="url(#titanium)" strokeWidth="10" />
+        <path d="M453 222Q456 124 500 111" stroke="#fff" strokeOpacity="0.4" strokeWidth="1.4" />
       </g>
+      {/* airbox / shark fin */}
+      <path d="M468 178Q500 166 532 178L544 252H456Z" fill="url(#paint)" />
+      <path d="M468 178Q500 166 532 178L544 252H456Z" fill="url(#coat)" />
+      <path d="M468 178Q500 166 532 178" stroke="#f0d6da" strokeOpacity="0.6" strokeWidth="1.5" fill="none" />
+    </g>
 
-      {/* rotaries + buttons */}
-      {[[424, 466, "#8f1020"], [424, 504, "#b88a00"], [576, 466, "#2a5fb0"], [576, 504, "#2a8a55"]].map(([x, y, c]) => (
-        <g key={`${x}-${y}`}>
-          <circle cx={x as number} cy={y as number} r="10" fill="#121316" stroke="#3a3c42" strokeWidth="1.5" />
-          <circle cx={x as number} cy={y as number} r="5.5" fill={c as string} />
-          <path d={`M${x} ${y}V${(y as number) - 8}`} stroke="#e8e8ea" strokeWidth="1.5" />
-        </g>
-      ))}
-      <circle cx="500" cy="512" r="12" fill="#121316" stroke="#3a3c42" strokeWidth="1.5" />
-      <circle cx="500" cy="512" r="7" fill="#8f1020" />
+    {/* ============ ENGINE COVER ============ */}
+    <g style={BODY_SHIFT}>
+      <path d={ENGINE} fill="url(#paint)" />
+      <path d={ENGINE} fill="url(#coat)" />
+      <path d={ENGINE} fill="url(#spec)" />
+      <g clipPath="url(#hoodClip)">
+        <path d="M489 236L452 432H470L497 236Z" fill="#e9e9ec" opacity="0.9" />
+        <path d="M511 236L548 432H530L503 236Z" fill="#e9e9ec" opacity="0.9" />
+        <path d="M384 432Q434 330 462 236L470 238Q444 332 396 432Z" fill="url(#carbon)" />
+        <path d="M616 432Q566 330 538 236L530 238Q556 332 604 432Z" fill="url(#carbon)" />
+        <path d={ENGINE} fill="url(#shade)" opacity="0.35" />
+      </g>
+      <path d="M462 236Q434 330 384 432M538 236Q566 330 616 432" stroke="#fff" strokeOpacity="0.16" strokeWidth="1.2" fill="none" />
+      {/* glints (moving reflection bands on the cover) */}
+      <g ref={glintRef} clipPath="url(#hoodClip)" />
+    </g>
+
+    {/* ============ SIDEPODS ============ */}
+    <g style={BODY_SHIFT}>
+      <use href="#pod" />
+      <use href="#pod" transform={MIRROR_FLIP} />
+    </g>
+
+    {/* ============ GEARBOX / EXHAUST / DIFFUSER ============ */}
+    <g style={BODY_SHIFT}>
+      <path d="M424 426H576L592 476H408Z" fill="url(#carbon)" />
+      <path d="M424 426H576L592 476H408Z" fill="url(#shade)" opacity="0.45" />
+      <path d="M424 426H576" stroke="#fff" strokeOpacity="0.14" strokeWidth="1.2" />
+      {/* exhaust tailpipe - glows with heat */}
+      <ellipse cx="500" cy="408" rx="30" ry="26" fill="url(#exhaust)" style={{ opacity: "calc(0.15 + var(--heat, 0) * 0.85)" }} />
+      <circle cx="500" cy="408" r="12" fill="#06070a" stroke="url(#titanium)" strokeWidth="3" />
+      <circle cx="500" cy="408" r="6" fill="#ff7a2f" style={{ opacity: "calc(0.1 + var(--heat, 0) * 0.8)" }} />
+      {/* diffuser */}
+      <path d="M326 480H674L706 508H294Z" fill="#050506" />
+      <path d="M326 480H674" stroke="#fff" strokeOpacity="0.12" strokeWidth="1.2" />
+      <path d="M356 482L336 508M392 482L378 508M428 482L420 508M464 482L462 508M500 482V508M536 482L538 508M572 482L580 508M608 482L622 508M644 482L664 508" stroke="#1f2126" strokeWidth="3.5" />
+      {/* rain / brake light */}
+      <ellipse cx="500" cy="452" rx="48" ry="30" fill="url(#taillight)" style={{ opacity: "calc(0.2 + var(--brake, 0) * 0.8)" }} />
+      <rect x="484" y="444" width="32" height="16" rx="3" fill="#ff2b3a" filter="url(#led)" style={{ opacity: "calc(0.45 + var(--brake, 0) * 0.55)" }} />
+    </g>
+
+    {/* ============ REAR SUSPENSION ============ */}
+    <g style={REAR_TYRE_SHIFT} strokeLinecap="round" fill="none">
+      <path d="M312 380L424 410M312 446L424 436" stroke="#050506" strokeWidth="13" />
+      <path d="M312 380L424 410M312 446L424 436" stroke="url(#carbon)" strokeWidth="10" />
+      <path d="M688 380L576 410M688 446L576 436" stroke="#050506" strokeWidth="13" />
+      <path d="M688 380L576 410M688 446L576 436" stroke="url(#carbon)" strokeWidth="10" />
+      <path d="M312 378L424 408M688 378L576 408" stroke="#fff" strokeOpacity="0.15" strokeWidth="1.3" />
+    </g>
+
+    {/* ============ REAR TYRES (near) + the side of the car revealed in a corner ============ */}
+    <g style={REAR_TYRE_SHIFT}>
+      {/* left sidewall - shows when the car turns right */}
+      <g style={{ transformOrigin: "170px 0px", transform: "scaleX(var(--side-l, 0))" }}>
+        <path d="M170 294Q122 312 116 402Q118 484 170 506Z" fill="url(#wall)" />
+        <path d="M150 360Q132 404 150 456" stroke="#5c616b" strokeOpacity="0.7" strokeWidth="3" fill="none" />
+        <path d="M170 294Q122 312 116 402" stroke="#fff" strokeOpacity="0.15" strokeWidth="1.4" fill="none" />
+      </g>
+      {/* right sidewall - shows when the car turns left */}
+      <g style={{ transformOrigin: "830px 0px", transform: "scaleX(var(--side-r, 0))" }}>
+        <path d="M830 294Q878 312 884 402Q882 484 830 506Z" fill="url(#wall)" />
+        <path d="M850 360Q868 404 850 456" stroke="#5c616b" strokeOpacity="0.7" strokeWidth="3" fill="none" />
+        <path d="M830 294Q878 312 884 402" stroke="#fff" strokeOpacity="0.15" strokeWidth="1.4" fill="none" />
+      </g>
+      <use href="#rtyre" />
+      <use href="#rtyre" transform={MIRROR_FLIP} />
+    </g>
+
+    {/* ============ REAR WING (nearest - swings the most) ============ */}
+    <g style={REAR_WING_SHIFT}>
+      {/* pylon */}
+      <rect x="488" y="268" width="24" height="96" fill="url(#carbon)" />
+      <rect x="488" y="268" width="24" height="96" fill="url(#shade)" opacity="0.4" />
+      {/* beam wing */}
+      <path d="M368 334H632L622 356H378Z" fill="url(#carbon)" />
+      <path d="M368 334H632" stroke="#a31a2f" strokeWidth="2.5" />
+      <path d="M368 334H632" stroke="#fff" strokeOpacity="0.15" strokeWidth="1" />
+      {/* main plane */}
+      <path d="M338 244H662V270H338Z" fill="url(#carbon)" />
+      <path d="M338 244H662" stroke="#fff" strokeOpacity="0.16" strokeWidth="1.2" />
+      <path d="M338 270H662" stroke="#000" strokeOpacity="0.6" strokeWidth="2" />
+      {/* upper (DRS) flap */}
+      <path d="M340 212H660V240H340Z" fill="url(#paint)" />
+      <path d="M340 212H660V240H340Z" fill="url(#coat)" />
+      <path d="M340 212H660" stroke="#f0d6da" strokeOpacity="0.55" strokeWidth="1.6" />
+      <path d="M340 240H660" stroke="#000" strokeOpacity="0.55" strokeWidth="2" />
+      {/* DRS actuator pods */}
+      <rect x="466" y="212" width="68" height="28" fill="#08080a" opacity="0.75" />
+      {/* race number */}
+      <text x="500" y="237" fill="#f2f2f4" fontSize="26" fontFamily="'Helvetica Neue', Arial, sans-serif" fontWeight="800" textAnchor="middle">8</text>
+      {/* endplates */}
+      <use href="#endplate" />
+      <use href="#endplate" transform={MIRROR_FLIP} />
     </g>
   </svg>
 );
