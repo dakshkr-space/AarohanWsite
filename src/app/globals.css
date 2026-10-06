@@ -1,19 +1,159 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "NB Architekt";
+  src: url("/fonts/NBArchitektStd-Light.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
 :root {
-  --red: #b03a3f;
-  --glass: rgba(170, 170, 180, 0.13);
-  --line: rgba(255, 255, 255, 0.22);
-  --text: #e9e9ee;
-  --muted: #a9a9b3;
+  --red: #e0182d;
+  --glass: rgba(180, 170, 185, 0.12);
+  --line: rgba(255, 255, 255, 0.2);
+  --text: #f0f1f5;
+  --muted: #9e8b93;
 }
 
 body {
   margin: 0;
-  background-color: #050505;
+  background-color: #070506;
   color: var(--text);
   font-family: "Segoe UI", system-ui, sans-serif;
   overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.landing-hero {
+  position: relative;
+  z-index: 30;
+  display: block;
+  height: 100vh;
+  min-height: 100vh;
+  height: 100svh;
+  min-height: 100svh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #250c10, #050405 48%, #270d11);
+}
+
+.landing-hero__frame {
+  position: absolute;
+  inset: 4px;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse 70% 125% at 50% 47%, #030304 0%, #050405 48%, #10080a 68%, #2a1014 88%, #4b171c 112%),
+    #080608;
+  box-shadow: inset 0 0 90px rgba(152, 31, 43, 0.12);
+}
+
+.particle-logo {
+  position: absolute;
+  z-index: 1;
+  top: 45.5%;
+  left: 63%;
+  display: block;
+  width: min(29vw, 680px);
+  aspect-ratio: 1097 / 734;
+  height: auto;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.landing-hero__lockup {
+  position: absolute;
+  z-index: 2;
+  bottom: clamp(28px, 5.6vh, 70px);
+  left: clamp(24px, 4.6vw, 100px);
+  color: #eee9eb;
+}
+
+.landing-hero__lockup h1 {
+  margin: 0;
+  font-family: "NB Architekt", "Segoe UI", sans-serif;
+  font-size: clamp(74px, 11.4vw, 236px);
+  font-weight: 300;
+  letter-spacing: -0.065em;
+  line-height: 0.78;
+}
+
+.landing-hero__lockup p {
+  margin: clamp(17px, 2.1vw, 38px) 0 0;
+  background: linear-gradient(180deg, #fff 0%, #b9bcc0 40%, #f5f6f7 52%, #45474c 64%, #e8e9eb 78%, #85888d 100%);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 3px 1px rgba(0, 0, 0, 0.95));
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(32px, 3.55vw, 74px);
+  font-weight: 900;
+  letter-spacing: 0.025em;
+  line-height: 0.9;
+  -webkit-background-clip: text;
+}
+
+.landing-hero__learn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(18px, 2.2vh, 28px);
+  color: rgba(232, 229, 231, 0.78);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.landing-hero__learn span {
+  color: #d4bfc2;
+  font-size: 17px;
+  line-height: 0.7;
+}
+
+.landing-hero__learn:hover,
+.landing-hero__learn:focus-visible { color: #fff; }
+
+@supports not (background-clip: text) {
+  .landing-hero__lockup p { color: #d8d8da; }
+}
+
+@media (max-width: 640px) {
+  .particle-logo {
+    top: 39%;
+    left: 57%;
+    width: min(52vw, 390px);
+  }
+
+  .landing-hero__lockup {
+    bottom: max(32px, 6vh);
+    left: 5vw;
+  }
+
+  .landing-hero__lockup h1 {
+    font-size: clamp(68px, 18vw, 116px);
+  }
+
+  .landing-hero__lockup p {
+    margin-top: 20px;
+    font-size: clamp(31px, 9vw, 46px);
+  }
+}
+
+@media (max-height: 600px) and (min-width: 641px) {
+  .landing-hero__lockup h1 { font-size: min(11.4vw, 26vh); }
+  .landing-hero__lockup p { margin-top: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
 
 /* Custom Car Animations */
@@ -37,116 +177,26 @@ body {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cb,
-  .tl {
-    animation: none;
+/* Banner dots pulsing animation */
+@keyframes banner-dots-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    text-shadow: 0 0 8px #ff223b;
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 18px #ff223b, 0 0 32px rgba(255, 34, 59, 0.9);
   }
 }
 
-/* Circuit-style trackside signage */
-.track-welcome {
-  position: absolute;
-  z-index: 12;
-  top: clamp(110px, 22vh, 220px);
-  left: clamp(14px, 4.4vw, 74px);
-  width: clamp(170px, 22vw, 250px);
-  padding: 14px 15px 16px;
-  color: #f2f1f4;
-  background: linear-gradient(135deg, rgba(31, 33, 43, 0.94), rgba(12, 12, 17, 0.88));
-  border: 1px solid rgba(224, 227, 240, 0.37);
-  border-left: 5px solid #b03a3f;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.34);
-  transform: skewY(-4deg);
-  pointer-events: none;
+.banner-dots {
+  animation: banner-dots-pulse 1.4s ease-in-out infinite;
 }
 
-.track-welcome > * { display: block; transform: skewY(4deg); }
-.track-welcome__eyebrow, .club-signal__title {
-  color: #ef6370;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-}
-.track-welcome strong { max-width: 100%; margin-top: 5px; overflow-wrap: anywhere; font-size: clamp(15px, 1.9vw, 28px); letter-spacing: 0.075em; line-height: 1.05; }
-.track-welcome__rule { width: 100%; height: 2px; margin: 11px 0 9px; background: linear-gradient(90deg, #b03a3f, transparent); }
-.track-welcome p { margin: 0; color: #c5c4cd; font-size: clamp(9px, 1vw, 12px); line-height: 1.45; letter-spacing: 0.04em; }
-
-.club-signal {
-  position: absolute;
-  z-index: 12;
-  top: clamp(130px, 26vh, 240px);
-  right: clamp(7px, 2.1vw, 35px);
-  display: flex;
-  width: min(106px, 12vw);
-  align-items: center;
-  flex-direction: column;
-  opacity: 0.76;
-  transform: perspective(800px) rotateY(-8deg) rotateZ(1.5deg) scale(0.86);
-  transform-origin: 50% 100%;
-  filter: saturate(0.83) drop-shadow(0 13px 12px rgba(0, 0, 0, 0.32));
-}
-.club-signal__title { margin-bottom: 7px; color: #f3e9eb; font-size: 8px; text-shadow: 0 1px 3px #000; white-space: nowrap; }
-.club-signal__housing {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 7px;
-  width: 100%;
-  padding: 11px 8px;
-  background: linear-gradient(90deg, rgba(21,22,27,.78), rgba(52,54,64,.73) 49%, rgba(17,18,24,.78));
-  border: 2px solid rgba(126,131,145,.68);
-  border-radius: 28px 28px 18px 18px;
-  box-shadow: inset 0 0 0 3px rgba(9,10,13,.75), inset 5px 0 10px rgba(255,255,255,.04);
-}
-.club-signal__housing::before,
-.club-signal__housing::after {
-  position: absolute;
-  z-index: -1;
-  top: 10px;
-  width: 5px;
-  height: calc(100% - 20px);
-  content: "";
-  background: linear-gradient(#7d8290, #181a20 25%, #090a0e 75%, #696e7a);
-  border-radius: 99px;
-  opacity: .7;
-}
-.club-signal__housing::before { left: -5px; }
-.club-signal__housing::after { right: -5px; }
-.club-signal__lamp {
-  display: grid;
-  width: clamp(48px, 6vw, 65px);
-  height: clamp(48px, 6vw, 65px);
-  place-items: center;
-  overflow: hidden;
-  background: radial-gradient(circle at 38% 30%, #51545d, #08090c 60%);
-  border: 3px solid #08090c;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px #7a7d88, inset 0 0 16px #000, 0 2px 5px #000;
-}
-.club-signal__lamp:nth-child(1) { box-shadow: inset 0 0 0 2px #ba424b, inset 0 0 16px #000, 0 0 11px rgba(200, 50, 59, .38); }
-.club-signal__lamp:nth-child(2) { box-shadow: inset 0 0 0 2px #d2a343, inset 0 0 16px #000, 0 0 11px rgba(210, 163, 67, .28); }
-.club-signal__lamp:nth-child(3) { box-shadow: inset 0 0 0 2px #609c65, inset 0 0 16px #000, 0 0 11px rgba(96, 156, 101, .28); }
-.club-signal__logo { width: 78%; height: 78%; aspect-ratio: 1; object-fit: cover; clip-path: circle(50%); border-radius: 50%; filter: drop-shadow(0 1px 2px #000); }
-.club-signal__pole { width: 15px; height: clamp(45px, 9vh, 86px); margin-top: -1px; background: linear-gradient(90deg, rgba(17,18,24,.58), rgba(85,89,101,.6) 48%, rgba(23,24,30,.58)); border-right: 1px solid rgba(121,126,140,.5); border-left: 1px solid rgba(7,7,10,.6); }
-.club-signal__base { width: clamp(72px, 9vw, 98px); height: 15px; margin-top: -1px; background: linear-gradient(90deg, rgba(11,12,16,.54), rgba(78,82,94,.58) 48%, rgba(11,12,16,.54)); clip-path: polygon(12% 0, 88% 0, 100% 100%, 0 100%); border-radius: 2px; box-shadow: 0 8px 11px rgba(0,0,0,.28); }
-
-@media (max-width: 800px) {
-  .track-welcome { top: 105px; left: 12px; width: 155px; padding: 10px; }
-  .track-welcome strong { font-size: 17px; }
-  .track-welcome p { font-size: 8px; }
-  .club-signal { top: 125px; right: 2px; width: 79px; transform: perspective(700px) rotateY(-8deg) rotateZ(1.5deg) scale(.76); }
-  .club-signal__housing { gap: 5px; padding: 8px 5px; }
-  .club-signal__lamp { width: 43px; height: 43px; }
-  .club-signal__pole { width: 11px; }
-}
-
-@media (max-width: 560px) {
-  .track-welcome { top: 92px; width: 130px; }
-  .club-signal { top: auto; bottom: 15vh; right: 0; width: 68px; transform: perspective(600px) rotateY(-8deg) rotateZ(1.5deg) scale(.72); }
-  .club-signal__title { font-size: 6px; }
-  .club-signal__housing { gap: 3px; padding: 6px 4px; }
-  .club-signal__lamp { width: 35px; height: 35px; border-width: 2px; }
-  .club-signal__pole { width: 9px; height: 42px; }
-  .club-signal__base { height: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .cb,
+  .tl,
+  .banner-dots {
+    animation: none;
+  }
 }

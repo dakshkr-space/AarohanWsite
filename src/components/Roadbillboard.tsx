@@ -4,13 +4,7 @@ import React from "react";
  * Roadside billboard that stands at a fixed world depth beside the road.
  * Positioned and scaled every scroll tick by updateBillboards() in CarAnimation.
  *
- * Layout: 600px wide, height is auto (board + posts). The element is anchored
- * at its bottom-centre (the ground contact point) by the transform that
- * CarAnimation writes, so scaling keeps the posts planted on the grass.
- *
- * `side` is +1 for the right of the road, -1 for the left. The red accent
- * edge sits on the road-facing side and the board is angled slightly toward
- * the oncoming driver.
+ * Refined palette matching the dark crimson/wine circuit aesthetic from the Figma frame.
  */
 export const BILLBOARD_WIDTH = 600;
 
@@ -29,13 +23,13 @@ interface RoadBillboardProps {
   billboardRef: (el: HTMLDivElement | null) => void;
 }
 
-const chrome =
-  "linear-gradient(180deg,#f4f6fa 0%,#b9bec8 28%,#6c717c 52%,#d5d9e1 74%,#80858f 100%)";
+const darkTitanium =
+  "linear-gradient(180deg,#2e313c 0%,#191b22 35%,#0d0e13 70%,#262832 100%)";
 const postMetal =
-  "linear-gradient(90deg,#14151a 0%,#8d929d 35%,#e9ecf2 50%,#6b707b 70%,#0e0f13 100%)";
+  "linear-gradient(90deg,#0a0b0e 0%,#22242c 35%,#4a4e5c 50%,#1c1d24 70%,#08090c 100%)";
 
 const POST_HEIGHT = 190;
-const ACCENT = "#e0182d";
+const ACCENT = "#ff233b";
 
 export const RoadBillboard: React.FC<RoadBillboardProps> = ({
   event,
@@ -59,17 +53,17 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
         zIndex: 1,
       }}
     >
-      {/* board (turned a little toward the oncoming driver) */}
+      {/* Board (angled toward the oncoming driver) */}
       <div
         style={{
           position: "relative",
           borderRadius: 14,
           padding: 8,
-          background: chrome,
-          transform: `perspective(1400px) rotateY(${side * -12}deg)`,
+          background: darkTitanium,
+          transform: `perspective(1400px) rotateY(${side * -10}deg)`,
           transformOrigin: "50% 50%",
           boxShadow:
-            "0 18px 40px rgba(0,0,0,0.7), 0 0 0 2px #05050a, inset 0 2px 0 rgba(255,255,255,0.8)",
+            "0 20px 45px rgba(0,0,0,0.85), 0 0 0 2px #040508, inset 0 1px 0 rgba(255,255,255,0.25)",
         }}
       >
         <div
@@ -77,14 +71,14 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
             position: "relative",
             overflow: "hidden",
             borderRadius: 8,
-            padding: "30px 38px 30px 38px",
+            padding: "30px 38px",
             background:
-              "linear-gradient(180deg,#0b0b10 0%,#14141b 60%,#07070a 100%)",
-            boxShadow: "inset 0 0 24px rgba(0,0,0,0.9)",
+              "linear-gradient(180deg,#09070d 0%,#130e18 55%,#060408 100%)",
+            boxShadow: "inset 0 0 28px rgba(0,0,0,0.95)",
             [accentEdge]: `16px solid ${ACCENT}`,
           }}
         >
-          {/* red LED strip along the top, brightens as the board gets close */}
+          {/* Red LED strip along the top, brightens as the board gets close */}
           <div
             style={{
               position: "absolute",
@@ -92,20 +86,21 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
               right: 0,
               top: 0,
               height: 5,
-              background: `linear-gradient(90deg,transparent,${ACCENT} 20%,#ff4a58 50%,${ACCENT} 80%,transparent)`,
+              background: `linear-gradient(90deg,transparent,${ACCENT} 20%,#ff5568 50%,${ACCENT} 80%,transparent)`,
               boxShadow: `0 0 calc(6px + var(--lit, 0) * 16px) ${ACCENT}`,
-              opacity: "calc(0.55 + var(--lit, 0) * 0.45)",
+              opacity: "calc(0.6 + var(--lit, 0) * 0.4)",
             }}
           />
 
           <div
             style={{
-              color: "#ff4a58",
+              color: "#ff4055",
               fontSize: 24,
-              letterSpacing: "0.3em",
+              letterSpacing: "0.28em",
               textTransform: "uppercase",
               fontWeight: 700,
               marginBottom: 10,
+              textShadow: "0 0 10px rgba(255,64,85,0.4)",
             }}
           >
             {event.number} &middot; {event.category}
@@ -119,11 +114,12 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
               fontSize: 64,
               lineHeight: 1.05,
               letterSpacing: "0.06em",
-              backgroundImage: chrome,
+              backgroundImage:
+                "linear-gradient(180deg,#ffffff 0%,#d2d5de 35%,#9296a2 65%,#f2f4fa 100%)",
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               color: "transparent",
-              filter: "drop-shadow(0 2px 0 rgba(0,0,0,0.9))",
+              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.95))",
             }}
           >
             {event.title}
@@ -132,7 +128,7 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
           <p
             style={{
               margin: 0,
-              color: "#b9bac4",
+              color: "#b4b2bc",
               fontSize: 30,
               lineHeight: 1.4,
               display: "-webkit-box",
@@ -150,10 +146,11 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
                 key={i}
                 style={{
                   padding: "4px 14px",
-                  border: "1.5px solid rgba(255,255,255,0.22)",
+                  border: "1.5px solid rgba(255,255,255,0.18)",
                   borderRadius: 999,
                   fontSize: 21,
-                  color: "#d8d9e0",
+                  color: "#d8d7df",
+                  background: "rgba(255,255,255,0.04)",
                 }}
               >
                 {tag}
@@ -163,7 +160,7 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
         </div>
       </div>
 
-      {/* posts */}
+      {/* Posts */}
       <div style={{ position: "relative", height: POST_HEIGHT }}>
         {[88, BILLBOARD_WIDTH - 88 - 30].map((left) => (
           <div
@@ -175,7 +172,7 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
               bottom: 0,
               width: 30,
               background: postMetal,
-              boxShadow: "0 0 0 2px #05050a",
+              boxShadow: "0 0 0 2px #040508",
             }}
           >
             <div
@@ -185,13 +182,13 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
                 right: -12,
                 bottom: 0,
                 height: 20,
-                background: "linear-gradient(180deg,#5a5f6a,#15161b)",
+                background: "linear-gradient(180deg,#424652,#0e1014)",
                 borderRadius: 3,
               }}
             />
           </div>
         ))}
-        {/* contact shadow on the ground */}
+        {/* Contact shadow on the ground */}
         <div
           style={{
             position: "absolute",
@@ -200,7 +197,7 @@ export const RoadBillboard: React.FC<RoadBillboardProps> = ({
             bottom: -10,
             height: 22,
             background:
-              "radial-gradient(ellipse at center, rgba(0,0,0,0.65), rgba(0,0,0,0) 70%)",
+              "radial-gradient(ellipse at center, rgba(0,0,0,0.7), rgba(0,0,0,0) 70%)",
           }}
         />
       </div>

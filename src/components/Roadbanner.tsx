@@ -1,18 +1,19 @@
 import React from "react";
 
 /**
- * Overhead gantry that sits on the road ("AAROHAN AHEAD" + arrow).
+ * Overhead racing gantry that spans the track ("AAROHAN LOADING...").
  * Positioned and scaled every scroll tick by updateBanner() in CarAnimation.
  *
- * The element is 1000 x 600 and anchored at its bottom-centre (the road
- * contact point), so scaling it keeps the posts planted on the asphalt.
+ * Matches the Figma frame:
+ * - Industrial dark steel truss structure
+ * - Top red LED dot row
+ * - Official Aarohan glowing infinity symbol (replacing text)
+ * - Digital LED "LOADING . . ." (replacing arrow)
+ * - Blended dark palette matching the circuit
  */
 interface RoadBannerProps {
   bannerRef: React.RefObject<HTMLDivElement | null>;
 }
-
-const chrome =
-  "linear-gradient(180deg,#f4f6fa 0%,#b9bec8 28%,#6c717c 52%,#d5d9e1 74%,#80858f 100%)";
 
 export const RoadBanner: React.FC<RoadBannerProps> = ({ bannerRef }) => (
   <div
@@ -26,100 +27,187 @@ export const RoadBanner: React.FC<RoadBannerProps> = ({ bannerRef }) => (
       transform: "translate(-50%, 0) scale(0)",
     }}
   >
-    {/* posts */}
-    {[40, 924].map((left) => (
+    {/* Truss support posts on left and right */}
+    {[36, 928].map((left) => (
       <div
         key={left}
         style={{
           position: "absolute",
           left,
-          top: 150,
+          top: 145,
           bottom: 0,
           width: 36,
           background:
-            "linear-gradient(90deg,#14151a 0%,#8d929d 35%,#e9ecf2 50%,#6b707b 70%,#0e0f13 100%)",
-          boxShadow: "0 0 0 2px #05050a",
+            "linear-gradient(90deg,#09090d 0%,#24262f 30%,#4d515e 50%,#20222a 70%,#08080c 100%)",
+          boxShadow: "0 0 0 2px #040507, 0 10px 25px rgba(0,0,0,0.8)",
         }}
       >
-        {/* base plate */}
+        {/* Lattice diagonal braces on the posts */}
         <div
           style={{
             position: "absolute",
-            left: -14,
-            right: -14,
+            inset: 0,
+            backgroundImage:
+              "repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(0,0,0,0.65) 18px, rgba(0,0,0,0.65) 24px)",
+            opacity: 0.75,
+          }}
+        />
+        {/* Post base plate planted on track asphalt */}
+        <div
+          style={{
+            position: "absolute",
+            left: -16,
+            right: -16,
             bottom: 0,
-            height: 22,
-            background: "linear-gradient(180deg,#5a5f6a,#15161b)",
-            borderRadius: 3,
+            height: 24,
+            background: "linear-gradient(180deg,#2e313a,#0e1014)",
+            borderRadius: 4,
+            boxShadow: "0 4px 10px rgba(0,0,0,0.9)",
           }}
         />
       </div>
     ))}
 
-    {/* beam */}
+    {/* Overhead gantry cross-beam / housing */}
     <div
       style={{
         position: "absolute",
         left: 0,
         right: 0,
         top: 0,
-        height: 170,
-        borderRadius: 14,
-        padding: 8,
-        background: chrome,
+        height: 180,
+        borderRadius: 12,
+        padding: "6px 8px",
+        background:
+          "linear-gradient(180deg,#181920 0%,#2d313c 20%,#15171d 50%,#0b0c10 100%)",
         boxShadow:
-          "0 18px 40px rgba(0,0,0,0.7), 0 0 0 2px #05050a, inset 0 2px 0 rgba(255,255,255,0.8)",
+          "0 22px 50px rgba(0,0,0,0.85), 0 0 0 2px #040508, inset 0 2px 1px rgba(255,255,255,0.25)",
       }}
     >
+      {/* Top red LED running light bar (matching Figma frame) */}
       <div
         style={{
-          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 14,
+          paddingTop: 6,
+          paddingBottom: 6,
+        }}
+      >
+        {Array.from({ length: 32 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              backgroundColor: "#ff233b",
+              boxShadow: "0 0 6px #ff233b, 0 0 10px rgba(255,35,59,0.7)",
+              opacity: 0.85,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main Electronic Display Screen */}
+      <div
+        style={{
+          height: 136,
           borderRadius: 8,
           background:
-            "linear-gradient(180deg,#0b0b10 0%,#14141b 60%,#07070a 100%)",
-          boxShadow: "inset 0 0 24px rgba(0,0,0,0.9)",
+            "linear-gradient(180deg,#060508 0%,#0c0a10 50%,#040306 100%)",
+          boxShadow:
+            "inset 0 0 30px rgba(0,0,0,0.95), inset 0 0 2px rgba(255,255,255,0.05)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 34,
+          gap: 28,
           position: "relative",
+          overflow: "hidden",
+          border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <span
-          style={{
-            fontFamily: "Impact, 'Arial Black', sans-serif",
-            fontWeight: 900,
-            fontSize: 70,
-            letterSpacing: "0.12em",
-            lineHeight: 1,
-            backgroundImage: chrome,
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-            filter: "drop-shadow(0 2px 0 rgba(0,0,0,0.9))",
-            whiteSpace: "nowrap",
-          }}
-        >
-          AAROHAN AHEAD
-        </span>
-
-        {/* arrow */}
-        <svg width="84" height="104" viewBox="0 0 84 104" style={{ filter: "drop-shadow(0 0 10px rgba(224,24,45,0.9))" }}>
-          <path d="M42 4L80 48H56V100H28V48H4Z" fill="#e0182d" stroke="#ffd0d4" strokeWidth="2.5" strokeLinejoin="round" />
-          <path d="M42 12L68 42" stroke="#fff" strokeOpacity="0.35" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-
-        {/* red light strip */}
+        {/* Subtle LED dot matrix mesh overlay */}
         <div
           style={{
             position: "absolute",
-            left: 24,
-            right: 24,
-            bottom: 8,
-            height: 4,
+            inset: 0,
+            backgroundImage:
+              "radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)",
+            backgroundSize: "6px 6px",
+            pointerEvents: "none",
+            opacity: 0.45,
+          }}
+        />
+
+        {/* Aarohan official symbol logo (replacing plain text and arrow) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/aarohan_symbol.png"
+          alt="Aarohan"
+          style={{
+            height: 94,
+            width: "auto",
+            objectFit: "contain",
+            mixBlendMode: "screen",
+            filter:
+              "drop-shadow(0 0 16px rgba(230,24,45,0.85)) drop-shadow(0 0 35px rgba(255,50,70,0.45))",
+            position: "relative",
+            zIndex: 2,
+          }}
+        />
+
+        {/* LOADING... in authentic LED digital scoreboard font */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            display: "flex",
+            alignItems: "baseline",
+            gap: 10,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Courier New', Courier, monospace, 'Arial Black', sans-serif",
+              fontWeight: 900,
+              fontSize: 46,
+              letterSpacing: "0.2em",
+              color: "#e2e6f0",
+              textShadow:
+                "0 0 12px rgba(230,235,255,0.7), 0 0 28px rgba(255,40,60,0.5), 0 2px 0 #000",
+              textTransform: "uppercase",
+            }}
+          >
+            LOADING
+          </span>
+          <span
+            style={{
+              fontFamily: "'Courier New', Courier, monospace",
+              fontWeight: 900,
+              fontSize: 52,
+              letterSpacing: "0.24em",
+              color: "#ff334b",
+              textShadow: "0 0 14px #ff223b, 0 0 28px rgba(255,34,59,0.8)",
+            }}
+          >
+            ...
+          </span>
+        </div>
+
+        {/* Bottom crimson neon accent strip */}
+        <div
+          style={{
+            position: "absolute",
+            left: 20,
+            right: 20,
+            bottom: 6,
+            height: 3,
             borderRadius: 2,
-            background: "linear-gradient(90deg,transparent,#e0182d 20%,#ff4a58 50%,#e0182d 80%,transparent)",
-            boxShadow: "0 0 12px #e0182d",
+            background:
+              "linear-gradient(90deg,transparent,#e0182d 20%,#ff5565 50%,#e0182d 80%,transparent)",
+            boxShadow: "0 0 14px #e0182d, 0 0 6px #ff4055",
           }}
         />
       </div>
