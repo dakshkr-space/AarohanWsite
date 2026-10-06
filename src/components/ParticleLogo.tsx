@@ -127,17 +127,18 @@ export function ParticleLogo({ src }: ParticleLogoProps) {
 
           const brightness =
             (pixels[index] + pixels[index + 1] + pixels[index + 2]) / (3 * 255);
-          // Lift the original dark chrome into a readable silver while keeping
-          // its engraved shadows and cool metallic highlights.
-          const channel = (value: number) =>
-            Math.max(0, Math.min(255, Math.round(176 + value * 0.31)));
+          // The reference keeps the emblem neutral silver; its red comes from
+          // the surrounding backdrop. Preserve the source chrome's contrast
+          // as a charcoal-to-silver luminance ramp instead of tinting it red.
+          const silver = Math.round(178 + brightness * 67);
+          const color = `${silver}, ${Math.round(silver * 0.99)}, ${Math.round(silver * 1.005)}`;
           nextParticles.push({
             x,
             y,
             phase: random * Math.PI * 2,
-            size: 0.55 + random * 0.8,
-            alpha: opacity * (0.44 + brightness * 0.54),
-            color: `rgb(${channel(pixels[index])}, ${channel(pixels[index + 1])}, ${channel(pixels[index + 2])})`,
+            size: 0.7 + random * 0.9,
+            alpha: opacity * (0.62 + brightness * 0.34),
+            color: `rgb(${color})`,
           });
         }
       }

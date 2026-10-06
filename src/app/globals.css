@@ -37,7 +37,7 @@ html {
   height: 100svh;
   min-height: 100svh;
   overflow: hidden;
-  background: linear-gradient(135deg, #250c10, #050405 48%, #270d11);
+  background: linear-gradient(135deg, #3b1015, #050405 48%, #421217);
 }
 
 .landing-hero__frame {
@@ -46,9 +46,9 @@ html {
   overflow: hidden;
   border-radius: 12px;
   background:
-    radial-gradient(ellipse 70% 125% at 50% 47%, #030304 0%, #050405 48%, #10080a 68%, #2a1014 88%, #4b171c 112%),
+    radial-gradient(ellipse 70% 125% at 50% 47%, #030304 0%, #050405 43%, #130709 61%, #351014 79%, #54171e 98%, #651b22 122%),
     #080608;
-  box-shadow: inset 0 0 90px rgba(152, 31, 43, 0.12);
+  box-shadow: inset 0 0 115px rgba(177, 35, 49, 0.2);
 }
 
 .particle-logo {
